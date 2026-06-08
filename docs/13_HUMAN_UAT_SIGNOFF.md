@@ -1,22 +1,56 @@
 # Human UAT Sign-off
 
-Phase **3D** — formal sign-off template for read-only golive validation.
+Phase **3D** template · Phase **3E** execution tracking.
 
 Complete this document during a **human walkthrough** with operations, IT, and business stakeholders. Automated Phase 3C passed 16/16 pages; this record captures real-world confirmation before production deployment.
 
+**Tracking status:** Human UAT is **In Progress** (Phase 3E). Sign-off fields below are execution-ready — fill in during the walkthrough session.
+
 ---
 
-## Session information
+## Execution session (fill during walkthrough)
 
 | Field | Value |
 |-------|-------|
-| **Test date** | _YYYY-MM-DD_ |
+| **Human UAT session date** | _YYYY-MM-DD_ |
 | **Tester name** | |
 | **Department** | |
+| **Device used** | e.g. Desktop Chrome / iPhone Safari / Android Chrome |
 | **Room code used** | TSS (default) |
 | **Environment** | Staging / Production Supabase |
 | **App version / branch** | tss-supply-chain-golive |
 | **Supabase health** | ok / connection_error / missing_env |
+
+---
+
+## Real document numbers tested
+
+Record actual identifiers observed during the session (minimum one per module group).
+
+| Module | Document / SKU / customer observed | Verified live? |
+|--------|-----------------------------------|:--------------:|
+| Sales (SO) | e.g. SO-________ | ☐ |
+| Inventory / stock | e.g. product code ________ | ☐ |
+| Reservation | e.g. reservation id / SO line ________ | ☐ |
+| WMS picking | e.g. picking no ________ | ☐ |
+| WMS dispatch | e.g. dispatch no ________ | ☐ |
+| Master data — customer | e.g. customer code ________ | ☐ |
+| Master data — product | e.g. product code ________ | ☐ |
+
+---
+
+## Module walkthrough checklist
+
+| Module | Pages | Walked? | Notes |
+|--------|-------|:-------:|-------|
+| Executive Dashboard | Management, Sales Overview | ☐ | |
+| Sales | Sales Order, Sales Forecast | ☐ | |
+| Planning | ATP, Reservation, Shortage Review | ☐ | |
+| Inventory | Stock Balance, Available Stock, Stock Movement | ☐ | |
+| WMS | Dashboard, Picking & Packing, Dispatch / GI | ☐ | WMS Dashboard = preview only (UAT-003) |
+| Consignment | CONSI Dashboard | ☐ | Preview only (UAT-003) |
+| Master Data | Customer Master, Product Master | ☐ | |
+| Admin / Control | System Control | ☐ | Supabase health ok |
 
 ---
 
@@ -35,7 +69,7 @@ Check each item during the walkthrough. All items should pass for a **GO** decis
 | 7 | Live data visible where Supabase-backed (not preview-only) | ☐ | |
 | 8 | Mobile spot-check — navigation + one table page readable | ☐ | |
 | 9 | Accepted limitations understood (WMS / CONSI preview) | ☐ | UAT-003 |
-| 10 | Reservation governance decision recorded | ☐ | UAT-004 |
+| 10 | Reservation governance decision recorded | ☐ | UAT-004 → `docs/14_GOLIVE_DECISION_REGISTER.md` DEC-001 |
 
 ---
 
@@ -68,53 +102,64 @@ Record each page visited and at least one **real document number**, SKU, or cust
 
 | Device / browser | Pages checked | Layout OK? | Notes |
 |------------------|---------------|:----------:|-------|
-| e.g. iPhone Safari | Executive + Sales Order + Stock Balance | ☐ | |
-| e.g. Android Chrome | Planning + Warehouse menu | ☐ | |
+| _Device 1_ | Executive + Sales Order + Stock Balance | ☐ | |
+| _Device 2_ | Planning + Warehouse menu | ☐ | |
 
 ---
 
-## Overall decision
+## Issues found (human session)
+
+Log any new issues here. Copy blockers to `docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md`.
+
+| Issue # | Page | Severity | Description | Status |
+|---------|------|----------|-------------|--------|
+| — | — | — | _None recorded yet_ | — |
+| UAT-004 | Reservation Workbench | Medium | Governance decision pending — see below | Open |
+
+---
+
+## Sign-off decision
 
 Select **one**:
 
-| Decision | Meaning |
-|----------|---------|
-| ☐ **GO** | All checks pass; deploy read-only golive |
-| ☐ **GO WITH LIMITATION** | Deploy with documented accepted limitations (UAT-003 preview pages; reservation partial safe mode until UAT-004 resolved) |
-| ☐ **HOLD** | Blockers found — log in `docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md` |
+| Decision | Meaning | Selected |
+|----------|---------|:--------:|
+| **GO** | All checks pass; deploy read-only golive | ☐ |
+| **GO WITH LIMITATION** | Deploy with documented accepted limitations (UAT-003 preview; UAT-004 partial safe mode until governance implemented) | ☐ |
+| **HOLD** | Blockers found — log in `docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md` | ☐ |
 
-**Decision selected:** _______________________
-
-**Decision date:** _______________________
-
-**Conditions / notes:**
+| Field | Value |
+|-------|-------|
+| **Decision selected** | _pending_ |
+| **Decision date** | |
+| **Conditions / notes** | |
 
 ---
 
 ## Reservation governance decision (UAT-004)
 
-Reservation Workbench current behavior (Phase 3D — **unchanged**):
+**Current behavior (unchanged in Phase 3E — tracking only):**
 
 - **Create reservation:** enabled
 - **Release reservation:** disabled (safe mode)
 - **Stock posting / Express write-back:** disabled
 
-Select **one** governance option for post-golive phases:
+Select **one** option. Record final choice in `docs/14_GOLIVE_DECISION_REGISTER.md` (DEC-001).
 
 | Option | Description | Selected |
 |--------|-------------|:--------:|
-| ☐ **Keep create enabled** | Maintain current partial safe mode; enable release only after separate sign-off |
-| ☐ **Disable create** | Full read-only reservation workbench until governance approves writes |
-| ☐ **Allow create only by role** | Restrict create to planning/admin roles via auth (future Phase 4+) |
-| ☐ **Require manager approval** | Create flows queue for approval before Supabase RPC (future Phase 4+) |
+| **A** | Planner can create **active** reservation; manager release/cancel | ☐ |
+| **B** | Planner creates **draft** reservation; manager activates/releases/cancels | ☐ **Recommended default** |
+| **C** | Reservation create **disabled** for first go-live | ☐ |
+| **D** | Other: _______________________ | ☐ |
 
-**Governance decision:** _______________________
-
-**Approved by (name / role):** _______________________
-
-**Approval date:** _______________________
-
-**Implementation phase:** _Do not implement until explicit Phase 4 sign-off_
+| Field | Value |
+|-------|-------|
+| **Recommended default** | **Option B** — Planner creates draft; manager activates/releases/cancels |
+| **Governance decision** | _pending_ |
+| **Approved by (name / role)** | |
+| **Approval date** | |
+| **Implementation** | Phase 4+ only — **do not implement in Phase 3E** |
 
 ---
 
@@ -132,15 +177,18 @@ Select **one** governance option for post-golive phases:
 ## After sign-off
 
 1. Update `src/services/system/uatStatusService.js`:
-   - `HUMAN_UAT_STATUS.status` → `'signed_off'` (or `'in_progress'` if walkthrough ongoing)
-   - `HUMAN_UAT_STATUS.statusLabel` → `'Signed Off'` / `'In Progress'`
-2. Update System Control page — Human UAT section reflects new status.
-3. Archive completed PDF or signed scan alongside this file (optional).
+   - `HUMAN_UAT_STATUS.status` → `'signed_off'` when complete (currently `'in_progress'`)
+   - `HUMAN_UAT_STATUS.signedOff` → `true`
+   - `HUMAN_UAT_STATUS.decision` → `'go'` | `'go_with_limitation'` | `'hold'`
+   - `HUMAN_UAT_STATUS.reservationGovernance` → `'A'` | `'B'` | `'C'` | `'D'`
+2. Update `docs/14_GOLIVE_DECISION_REGISTER.md` with selected options and dates.
+3. Update System Control — Human UAT section reflects new status.
 
 ---
 
 ## Related documents
 
+- Decision register: `docs/14_GOLIVE_DECISION_REGISTER.md`
 - Automated UAT: `docs/11_LIVE_READONLY_UAT_EXECUTION.md`
 - Issue log: `docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md`
 - Validation plan: `docs/10_LIVE_READONLY_VALIDATION_PLAN.md`

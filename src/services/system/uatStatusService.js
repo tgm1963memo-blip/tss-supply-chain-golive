@@ -1,10 +1,10 @@
 /**
- * Live read-only UAT status — Phase 3C automated pass + Phase 3D human sign-off prep.
+ * Live read-only UAT status — Phase 3C automated pass + Phase 3D–3E human sign-off tracking.
  */
 export const UAT_SCOPE_PAGES = 16;
 
 export const UAT_STATUS = {
-  lastUpdated: '2026-06-08T12:00:00.000Z',
+  lastUpdated: '2026-06-08T14:00:00.000Z',
   tester: 'Cursor Agent (Phase 3C)',
   environmentStatus: 'configured',
   supabaseHealthStatus: 'ok',
@@ -19,26 +19,33 @@ export const UAT_STATUS = {
     issueLog: 'docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md',
     plan: 'docs/10_LIVE_READONLY_VALIDATION_PLAN.md',
     humanSignoff: 'docs/13_HUMAN_UAT_SIGNOFF.md',
+    decisionRegister: 'docs/14_GOLIVE_DECISION_REGISTER.md',
   },
 };
 
 export const HUMAN_UAT_STATUS = {
-  status: 'pending',
-  statusLabel: 'Pending',
-  lastUpdated: '2026-06-08T12:00:00.000Z',
+  status: 'in_progress',
+  statusLabel: 'In Progress',
+  signedOff: false,
+  decision: 'pending',
+  reservationGovernance: 'pending',
+  reservationGovernanceRecommended: 'B',
+  openIssues: ['UAT-004'],
+  lastUpdated: '2026-06-08T14:00:00.000Z',
   signoffDocument: 'docs/13_HUMAN_UAT_SIGNOFF.md',
+  decisionRegister: 'docs/14_GOLIVE_DECISION_REGISTER.md',
   openNonBlockingIssues: [
     {
       id: 'UAT-004',
       page: 'Reservation Workbench',
-      summary: 'Create reservation enabled; release disabled — governance decision required',
+      summary: 'Create reservation enabled; release disabled — governance decision required (DEC-001)',
     },
   ],
   acceptedLimitations: [
     {
       id: 'UAT-003',
       pages: 'WMS Dashboard, CONSI Dashboard',
-      summary: 'Preview-only static data — live Supabase feeds deferred to Phase 4+',
+      summary: 'Preview-only static data — live Supabase feeds deferred to Phase 4+ (DEC-003)',
     },
   ],
   closedIssues: ['UAT-001', 'UAT-002'],

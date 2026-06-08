@@ -29,6 +29,22 @@ function humanUatBadgeType(status) {
   return 'warning';
 }
 
+function formatDecisionLabel(value) {
+  if (!value || value === 'pending') return 'Pending';
+  return String(value).replace(/_/g, ' ').toUpperCase();
+}
+
+function governanceLabel(value, recommended) {
+  if (!value || value === 'pending') {
+    return recommended ? `Pending (recommended: Option ${recommended})` : 'Pending';
+  }
+  if (value === 'A') return 'Option A — Planner creates active; manager release/cancel';
+  if (value === 'B') return 'Option B — Planner draft; manager activate/release/cancel';
+  if (value === 'C') return 'Option C — Create disabled for first go-live';
+  if (value === 'D') return 'Option D — Other';
+  return value;
+}
+
 export default function SystemControlPage() {
   const uatStatus = getUatStatusSummary();
   const humanUat = getHumanUatStatus();
@@ -214,6 +230,32 @@ export default function SystemControlPage() {
               <td className="font-mono text-xs">{humanUat.signoffDocument}</td>
             </tr>
             <tr>
+              <th className="text-left">Signed off</th>
+              <td>{yesNo(humanUat.signedOff)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Decision</th>
+              <td>
+                <Badge type={humanUat.decision === 'pending' ? 'warning' : 'success'}>
+                  {formatDecisionLabel(humanUat.decision)}
+                </Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Reservation governance</th>
+              <td className="text-sm text-[var(--color-text-muted)]">
+                {governanceLabel(humanUat.reservationGovernance, humanUat.reservationGovernanceRecommended)}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Decision register</th>
+              <td className="font-mono text-xs">{humanUat.decisionRegister}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Open issues</th>
+              <td>{humanUat.openIssues?.join(', ') || 'None'}</td>
+            </tr>
+            <tr>
               <th className="text-left">Open non-blocking issues</th>
               <td>
                 {humanUat.openNonBlockingIssues.length === 0 ? (
@@ -239,6 +281,18 @@ export default function SystemControlPage() {
                     </li>
                   ))}
                 </ul>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">UAT-004 (open)</th>
+              <td className="text-sm text-[var(--color-text-muted)]">
+                Reservation Workbench — governance pending (DEC-001)
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">UAT-003 (accepted)</th>
+              <td className="text-sm text-[var(--color-text-muted)]">
+                WMS / CONSI preview-only — design limitation (DEC-003)
               </td>
             </tr>
             <tr>
@@ -300,6 +354,7 @@ export default function SystemControlPage() {
         UAT execution: <code className="rounded bg-black/5 px-1">docs/11_LIVE_READONLY_UAT_EXECUTION.md</code>.
         Issue log: <code className="rounded bg-black/5 px-1">docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md</code>.
         Human sign-off: <code className="rounded bg-black/5 px-1">docs/13_HUMAN_UAT_SIGNOFF.md</code>.
+        Decision register: <code className="rounded bg-black/5 px-1">docs/14_GOLIVE_DECISION_REGISTER.md</code>.
       </Alert>
     </section>
   );
