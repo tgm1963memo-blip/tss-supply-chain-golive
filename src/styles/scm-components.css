@@ -1,0 +1,92 @@
+@layer components {
+  .tgm-page {
+    @apply grid gap-6;
+  }
+
+  .tgm-card {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .tgm-card-padded {
+    @apply tgm-card p-5 sm:p-6;
+  }
+
+  .tgm-button-primary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-md px-4 text-sm font-semibold transition;
+    background-color: var(--color-primary);
+    color: #111111;
+  }
+
+  .tgm-button-primary:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  .tgm-button-secondary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-md border px-4 text-sm font-semibold transition;
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-main);
+  }
+
+  .tgm-button-secondary:hover {
+    background-color: var(--color-bg);
+  }
+
+  .tgm-input {
+    min-height: 2.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-text-main);
+    outline: none;
+  }
+
+  .tgm-input:disabled {
+    background-color: var(--color-bg);
+    color: var(--color-text-muted);
+  }
+
+  .tgm-table-wrap {
+    @apply tgm-card overflow-hidden;
+  }
+
+  .tgm-table {
+    @apply min-w-full divide-y text-sm;
+    border-color: var(--color-border);
+  }
+
+  .tgm-table thead {
+    @apply text-left text-xs font-semibold uppercase tracking-wide;
+    background-color: var(--color-bg);
+    color: var(--color-text-muted);
+  }
+
+  .tgm-table th {
+    @apply px-4 py-3 sm:px-5;
+  }
+
+  .tgm-table td {
+    @apply px-4 py-3 sm:px-5;
+  }
+
+  .tgm-table tbody {
+    @apply divide-y;
+    border-color: color-mix(in srgb, var(--color-border) 40%, transparent);
+  }
+
+  .tgm-table tbody tr:hover {
+    background-color: var(--color-bg);
+  }
+
+  .tgm-table-panel-header {
+    @apply flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-5;
+    border-color: var(--color-border);
+  }
+}

@@ -1,0 +1,271 @@
+/* Legacy TGM Supply Chain forecast styles — ported from tgm-supplychain/index.html */
+.legacy-forecast {
+  --N: #1e3a5f;
+  --bg: #f4f6f9;
+  --bg2: #eceef2;
+  --W: #fff;
+  --BD: #cdd5e0;
+  --BL: #1553a0;
+  --LBL: #e7effc;
+  --LG: #e5f3ee;
+  --LR: #fbebeb;
+  --LY: #fdf2e2;
+  --TX: #0d1117;
+  --TX2: #4a5568;
+  --TX3: #8896a5;
+  --G: #0a5940;
+  --R: #a32d2d;
+  --A: #7a4500;
+  font-size: 13.5px;
+  color: var(--TX);
+}
+
+.legacy-forecast .fc-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--N);
+  margin-bottom: 0.75rem;
+}
+
+.legacy-forecast .frow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.legacy-forecast .btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--BD);
+  background: var(--W);
+  color: var(--TX);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+}
+
+.legacy-forecast .btn:hover {
+  background: var(--bg2);
+}
+
+.legacy-forecast .btn-p {
+  background: #d4af37;
+  color: #000;
+  border-color: #d4af37;
+  font-weight: 700;
+}
+
+.legacy-forecast .btn-g {
+  background: var(--G);
+  color: #fff;
+  border-color: var(--G);
+}
+
+.legacy-forecast .btn-r {
+  background: var(--R);
+  color: #fff;
+  border-color: var(--R);
+}
+
+.legacy-forecast .btn-ai {
+  background: #1a56a0;
+  color: #fff;
+  border-color: #1a56a0;
+  font-weight: 600;
+}
+
+.legacy-forecast .btn-xs {
+  padding: 3px 8px;
+  font-size: 11.5px;
+  border-radius: 5px;
+  min-height: 28px;
+}
+
+.legacy-forecast .fc-select,
+.legacy-forecast .fc-input {
+  padding: 5px 10px;
+  border: 1px solid var(--BD);
+  border-radius: 7px;
+  font-size: 13px;
+  height: 34px;
+  background: var(--W);
+  color: var(--TX);
+}
+
+.legacy-forecast .card {
+  background: var(--W);
+  border: 1px solid var(--BD);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.legacy-forecast .fc-card-head {
+  background: var(--N);
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.legacy-forecast .fc-grid-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.legacy-forecast .fc-grid-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 680px;
+  font-size: 13px;
+}
+
+.legacy-forecast .fc-grid-table th,
+.legacy-forecast .fc-grid-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--bg2);
+}
+
+.legacy-forecast .fc-grid-table thead th {
+  background: var(--bg2);
+  font-size: 11px;
+  text-align: left;
+}
+
+.legacy-forecast .fc-grid-table .r {
+  text-align: right;
+}
+
+.legacy-forecast .fc-grid-table .sticky-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.legacy-forecast .fc-grid-table tr.highlighted .sticky-col {
+  background: #f0f9ff;
+}
+
+.legacy-forecast .fc-grid-table tr.highlighted {
+  background: #f0f9ff;
+}
+
+.legacy-forecast .fcg-inp {
+  width: 100%;
+  text-align: right;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--BD);
+  border-radius: 5px;
+}
+
+.legacy-forecast .fcg-inp.has-value {
+  background: #eff6ff;
+}
+
+.legacy-forecast .fc-footer-actions {
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--bg2);
+  flex-wrap: wrap;
+}
+
+.legacy-forecast .fc-toast {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  background: var(--LG);
+  color: var(--G);
+  border: 1px solid rgba(10, 89, 64, 0.2);
+}
+
+.legacy-forecast .fc-safe-note {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  background: var(--LY);
+  color: var(--A);
+  border: 1px solid rgba(122, 69, 0, 0.2);
+}
+
+.legacy-forecast .krow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.legacy-forecast .kpi {
+  background: var(--W);
+  border: 1px solid var(--BD);
+  border-radius: 10px;
+  padding: 13px 15px;
+}
+
+.legacy-forecast .kl {
+  font-size: 11.5px;
+  color: var(--TX2);
+  margin-bottom: 5px;
+}
+
+.legacy-forecast .kv {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.legacy-forecast .tw {
+  overflow-x: auto;
+}
+
+.legacy-forecast .tw table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.legacy-forecast .tw th {
+  background: var(--bg2);
+  padding: 8px 12px;
+  font-size: 11.5px;
+}
+
+.legacy-forecast .tw td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bg2);
+}
+
+.legacy-forecast .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.legacy-forecast .bbl { background: var(--LBL); color: var(--BL); }
+.legacy-forecast .bbg { background: var(--LG); color: var(--G); }
+.legacy-forecast .bba { background: var(--LY); color: var(--A); }
+
+.legacy-forecast .fc-entry-textarea {
+  width: 100%;
+  height: 260px;
+  padding: 10px;
+  border: 1px solid var(--BD);
+  border-radius: 8px;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}

@@ -1,62 +1,53 @@
 # 02 — Function Status Matrix
 
-Legend: **MOCK** = static UI with sample data | **PLAN** = designed, not built | **LIVE** = production-ready
+Legend: **MOCK** = static UI with sample data | **PLAN** = designed, not built | **LIVE** = production-ready (requires Supabase env)
 
 | Module | Screen | Route | Status | Data Source |
 |--------|--------|-------|--------|-------------|
-| Dashboard | Dashboard | `/` | MOCK | mockSalesOrders |
-| Sales | Sales Order List | `/sales/orders` | MOCK | mockSalesOrders |
-| Sales | Sales Order Detail | `/sales/orders/:orderId` | MOCK | mockSalesOrders |
-| Sales | Reservation Workbench | `/sales/reservation` | MOCK | mockSalesOrders |
-| Sales | Shortage Alerts | `/sales/shortage` | MOCK | mockSalesOrders |
-| Sales | Return / CN | `/sales/return-cn` | MOCK | mockSalesOrders |
-| Planning | Sales Forecast | `/planning/forecast` | MOCK | mockSalesOrders |
-| Planning | Stock Planning | `/planning/stock` | MOCK | mockInventory |
+| Executive | Management Dashboard | `/executive/management` | MOCK | mockSalesOrders |
+| Sales | Sales Order List | `/sales/orders` | LIVE | sc_so_reservation_candidate_view |
+| Sales | Sales Order Detail | `/sales/orders/:orderId` | LIVE | sc_so_reservation_candidate_view |
+| Planning | Reservation Workbench | `/planning/reservation` | LIVE | reservationService (safe mode) |
+| Planning | Shortage Review | `/planning/shortage-review` | LIVE | demandPlanningService |
+| Planning | Demand Plan | `/planning/demand` | LIVE | sc_so_pick_pack_candidate_view |
 | Planning | ATP Workbench | `/planning/atp` | MOCK | mockInventory |
-| Planning | Demand Plan | `/planning/demand` | MOCK | mockInventory |
-| Inventory | Stock Balance | `/inventory/balance` | MOCK | mockInventory |
-| Inventory | Stock Movement | `/inventory/movement` | MOCK | mockInventory |
-| Inventory | Inventory Ledger | `/inventory/ledger` | MOCK | mockInventory |
-| WMS | WMS Dashboard | `/wms` | MOCK | mockWms |
-| WMS | Receiving | `/wms/receiving` | MOCK | mockWms |
-| WMS | Putaway | `/wms/putaway` | MOCK | mockWms |
-| WMS | Transfer | `/wms/transfer` | MOCK | mockWms |
-| WMS | Picking | `/wms/picking` | MOCK | mockWms |
-| WMS | Dispatch | `/wms/dispatch` | MOCK | mockWms |
-| WMS | Stock Count | `/wms/stock-count` | MOCK | mockWms |
-| WMS | Stock Adjustment | `/wms/adjustment` | MOCK | mockWms |
-| WMS | Barcode Scan | `/wms/barcode` | MOCK | mockWms |
-| Consignment | Dashboard | `/consignment` | MOCK | mockConsignment |
-| Consignment | Branch Stock | `/consignment/branch-stock` | MOCK | mockConsignment |
-| Consignment | Consignment SO | `/consignment/so` | MOCK | mockConsignment |
-| Consignment | Movement | `/consignment/movement` | MOCK | mockConsignment |
-| Consignment | Return / CN | `/consignment/return-cn` | MOCK | mockConsignment |
-| Sample | Sample Request | `/sample-consumable/sample` | MOCK | mockMasterData |
-| Sample | Consumable Request | `/sample-consumable/consumable` | MOCK | mockMasterData |
-| Sample | Approval | `/sample-consumable/approval` | MOCK | mockMasterData |
-| Sample | Issue Confirm | `/sample-consumable/issue` | MOCK | mockInventory |
-| Sample | Usage Report | `/sample-consumable/usage` | MOCK | mockMasterData |
-| Master Data | Product Master | `/master-data/products` | MOCK | mockMasterData |
-| Master Data | Customer Master | `/master-data/customers` | MOCK | mockMasterData |
-| Master Data | Branch Master | `/master-data/branches` | MOCK | mockMasterData |
-| Master Data | Warehouse Master | `/master-data/warehouses` | MOCK | mockMasterData |
-| Master Data | Location Master | `/master-data/locations` | MOCK | mockInventory |
-| Master Data | UOM Conversion | `/master-data/uom` | MOCK | mockMasterData |
-| Master Data | SKU Alias | `/master-data/sku-alias` | MOCK | mockMasterData |
-| Reports | Sales & Stock | `/reports/sales-stock` | MOCK | mockSalesOrders |
-| Reports | Shortage | `/reports/shortage` | MOCK | mockSalesOrders |
-| Reports | Consignment | `/reports/consignment` | MOCK | mockConsignment |
-| Reports | Sample Usage | `/reports/sample-usage` | MOCK | mockMasterData |
-| Admin | Users | `/admin/users` | MOCK | mockMasterData |
-| Admin | Roles & Permissions | `/admin/roles` | MOCK | mockMasterData |
-| Admin | Audit Log | `/admin/audit` | MOCK | mockMasterData |
-| Admin | Sync Monitor | `/admin/sync` | MOCK | mockMasterData |
+| Inventory | Stock Balance | `/warehouse/inventory/balance` | LIVE | sc_inventory_balance_view |
+| Inventory | Available Stock | `/warehouse/inventory/available` | LIVE | tgd_withdrawal_allocations |
+| Inventory | Stock Movement | `/warehouse/inventory/movement` | LIVE | sc_inventory_ledger |
+| Inventory | Inventory Ledger | `/warehouse/inventory/ledger` | LIVE | tgd_inventory_movements |
+| Inventory | Stock Adjustment | `/warehouse/inventory/adjustment` | MOCK | operations-preview (stock-adjust) |
+| Inventory | Cycle Count | `/warehouse/inventory/cycle-count` | LIVE | tgd_stock_count_documents |
+| Inventory | Lot / Expiry Control | `/warehouse/inventory/lot-expiry` | LIVE | tgd_stock_balances |
+| WMS | WMS Dashboard | `/warehouse/wms` | MOCK | operations-preview (warehouse-dashboard) |
+| WMS | Receiving | `/warehouse/wms/receiving` | LIVE | tgd_receiving_documents |
+| WMS | Putaway | `/warehouse/wms/putaway` | LIVE | tgd_putaway_documents |
+| WMS | Transfer | `/warehouse/wms/transfer` | LIVE | tgd_transfer_documents |
+| WMS | Picking & Packing | `/warehouse/wms/picking-packing` | LIVE | WMS picking + SO pick-pack candidates |
+| WMS | Dispatch / Goods Issue | `/warehouse/wms/dispatch-goods-issue` | LIVE | dispatch + outbound documents |
+| WMS | Scan Center | `/warehouse/wms/scan-center` | MOCK | HandheldScanHub (UI only) |
+| WMS | Handheld Operations | `/warehouse/wms/handheld` | LIVE | handheld session lists |
+| Consignment | Dashboard | `/consignment` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Branch Stock | `/consignment/branch-stock` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Consignment SO | `/consignment/so` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Movement | `/consignment/movement` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Sell-out Record | `/consignment/sell-out` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Return from Branch | `/consignment/return-from-branch` | MOCK | operations-preview (modern-trade-stock) |
+| Consignment | Return / CN | `/consignment/return-cn` | MOCK | operations-preview (modern-trade-stock) |
+| Master Data | Product Master | `/master-data/products` | LIVE | sc_products |
+| Master Data | SKU Settings | `/master-data/sku-settings` | MOCK | operations-preview (product-mapping) |
+| Master Data | SKU Alias | `/master-data/sku-alias` | MOCK | operations-preview (product-mapping) |
+| Master Data | UOM Conversion | `/master-data/uom` | LIVE | sc_product_uom_conversion |
+| Master Data | Customer Master | `/master-data/customers` | LIVE | sc_customers |
+| Master Data | Customer Branch | `/master-data/customer-branch` | MOCK | mockMasterData |
+| Master Data | Warehouse Master | `/master-data/warehouses` | LIVE | sc_warehouses |
+| Master Data | Location Master | `/master-data/locations` | LIVE | tgd_locations |
+| Master Data | Room / Company | `/master-data/room-company` | MOCK | mockMasterData |
 
 ## Backend Integration Status
 
 | Integration | Status | Notes |
 |-------------|--------|-------|
-| Supabase | PLAN | Client package installed, not initialized |
-| Express ERP | PLAN | No API layer |
-| WMS Hardware | PLAN | Barcode page is UI mockup only |
-| Auth / RBAC | PLAN | Admin screens visible without login |
+| Supabase | LIVE | Client initialized; requires `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` |
+| Express ERP | PLAN | Read via sc_express_* tables; no write-back |
+| WMS Hardware | MOCK | Scan Center / Handheld UI only — no scan write-back |
+| Auth / RBAC | PLAN | Admin screens deferred; no login gate |

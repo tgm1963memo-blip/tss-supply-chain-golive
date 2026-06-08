@@ -2,6 +2,22 @@ import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
 import navigationGroups from '../../app/navigation';
 
+function NavItems({ items, onClose }) {
+  return items.map((item) => (
+    <NavLink
+      key={item.path}
+      to={item.path}
+      end={item.path === '/executive/management'}
+      className={({ isActive }) =>
+        `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+      }
+      onClick={onClose}
+    >
+      {item.label}
+    </NavLink>
+  ));
+}
+
 export default function Sidebar({ isOpen, onClose }) {
   return (
     <>
@@ -33,18 +49,12 @@ export default function Sidebar({ isOpen, onClose }) {
           {navigationGroups.map((group) => (
             <div key={group.label}>
               <div className="sidebar__group-label">{group.label}</div>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === '/'}
-                  className={({ isActive }) =>
-                    `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
-                  }
-                  onClick={onClose}
-                >
-                  {item.label}
-                </NavLink>
+              {group.items && <NavItems items={group.items} onClose={onClose} />}
+              {group.subGroups?.map((subGroup) => (
+                <div key={subGroup.label}>
+                  <div className="sidebar__subgroup-label">{subGroup.label}</div>
+                  <NavItems items={subGroup.items} onClose={onClose} />
+                </div>
               ))}
             </div>
           ))}

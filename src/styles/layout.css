@@ -87,6 +87,16 @@
   color: var(--color-text-muted);
 }
 
+.sidebar__subgroup-label {
+  padding: var(--space-xs) var(--space-lg) var(--space-xs) calc(var(--space-lg) + 0.5rem);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-secondary);
+  opacity: 0.85;
+}
+
 .sidebar__link {
   display: flex;
   align-items: center;

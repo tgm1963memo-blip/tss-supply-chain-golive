@@ -1,6 +1,13 @@
 @import './variables.css';
+@import './scm-theme.css';
 @import './layout.css';
 @import './components.css';
+@import './scm-components.css';
+@import './wms-components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 *,
 *::before,

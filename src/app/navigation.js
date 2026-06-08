@@ -1,88 +1,108 @@
-import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   ShoppingCart,
   CalendarRange,
-  Package,
   Warehouse,
   Store,
-  FlaskConical,
   Database,
-  BarChart3,
-  Settings,
 } from 'lucide-react';
 
+/**
+ * Final clean menu structure — Phase: menu + matrix preparation only.
+ * Groups may use `items` (flat) or `subGroups` (nested).
+ */
 export const navigationGroups = [
   {
-    label: 'Overview',
+    label: 'Executive Dashboard',
     icon: LayoutDashboard,
-    items: [{ label: 'Dashboard', path: '/' }],
+    items: [
+      { label: 'Management Dashboard', path: '/executive/management' },
+      { label: 'Sales Overview', path: '/executive/sales-overview' },
+      { label: 'Stock Overview', path: '/executive/stock-overview' },
+      { label: 'Shortage Overview', path: '/executive/shortage-overview' },
+      { label: 'Order Fulfillment', path: '/executive/order-fulfillment' },
+      { label: 'CONSI Overview', path: '/executive/consi-overview' },
+    ],
   },
   {
     label: 'Sales',
     icon: ShoppingCart,
     items: [
-      { label: 'Sales Orders', path: '/sales/orders' },
-      { label: 'Order Detail', path: '/sales/orders/SO-2026-001' },
-      { label: 'Reservation Workbench', path: '/sales/reservation' },
-      { label: 'Shortage Alerts', path: '/sales/shortage' },
+      { label: 'Sales Order', path: '/sales/orders' },
+      { label: 'Sales Order Detail', path: '/sales/orders/SO-2026-001' },
+      { label: 'Sales Forecast', path: '/sales/forecast' },
+      { label: 'Sales Overview', path: '/sales/overview' },
       { label: 'Return / CN', path: '/sales/return-cn' },
+      { label: 'Customer Registration', path: '/sales/customer-registration' },
+      { label: 'Customer Map', path: '/sales/customer-map' },
+      { label: 'Sample & Consumable', path: '/sales/sample-consumable' },
     ],
   },
   {
-    label: 'Planning',
+    label: 'Planning & Allocation',
     icon: CalendarRange,
     items: [
-      { label: 'Sales Forecast', path: '/planning/forecast' },
-      { label: 'Stock Planning', path: '/planning/stock' },
+      { label: 'Demand Planning', path: '/planning/demand' },
+      { label: 'Stock & Planning', path: '/planning/stock' },
       { label: 'ATP Workbench', path: '/planning/atp' },
-      { label: 'Demand Plan', path: '/planning/demand' },
+      { label: 'Reservation Workbench', path: '/planning/reservation' },
+      { label: 'Shortage Review', path: '/planning/shortage-review' },
+      { label: 'Reservation Summary', path: '/planning/reservation-summary' },
+      { label: 'Production / Purchase Suggestion', path: '/planning/production-purchase' },
     ],
   },
   {
-    label: 'Inventory',
-    icon: Package,
-    items: [
-      { label: 'Stock Balance', path: '/inventory/balance' },
-      { label: 'Stock Movement', path: '/inventory/movement' },
-      { label: 'Inventory Ledger', path: '/inventory/ledger' },
-    ],
-  },
-  {
-    label: 'WMS',
+    label: 'Warehouse',
     icon: Warehouse,
-    items: [
-      { label: 'WMS Dashboard', path: '/wms' },
-      { label: 'Receiving', path: '/wms/receiving' },
-      { label: 'Putaway', path: '/wms/putaway' },
-      { label: 'Transfer', path: '/wms/transfer' },
-      { label: 'Picking', path: '/wms/picking' },
-      { label: 'Dispatch', path: '/wms/dispatch' },
-      { label: 'Stock Count', path: '/wms/stock-count' },
-      { label: 'Stock Adjustment', path: '/wms/adjustment' },
-      { label: 'Barcode Scan', path: '/wms/barcode' },
+    subGroups: [
+      {
+        label: 'Inventory Control',
+        items: [
+          { label: 'Stock Balance', path: '/warehouse/inventory/balance' },
+          { label: 'Available Stock', path: '/warehouse/inventory/available' },
+          { label: 'Stock Movement', path: '/warehouse/inventory/movement' },
+          { label: 'Inventory Ledger', path: '/warehouse/inventory/ledger' },
+          { label: 'Stock Adjustment', path: '/warehouse/inventory/adjustment' },
+          { label: 'Cycle Count', path: '/warehouse/inventory/cycle-count' },
+          { label: 'Lot / Expiry Control', path: '/warehouse/inventory/lot-expiry' },
+        ],
+      },
+      {
+        label: 'WMS Operations',
+        items: [
+          { label: 'WMS Dashboard', path: '/warehouse/wms' },
+          { label: 'Receiving', path: '/warehouse/wms/receiving' },
+          { label: 'Putaway', path: '/warehouse/wms/putaway' },
+          { label: 'Transfer', path: '/warehouse/wms/transfer' },
+          { label: 'Picking & Packing', path: '/warehouse/wms/picking-packing' },
+          { label: 'Dispatch / Goods Issue', path: '/warehouse/wms/dispatch-goods-issue' },
+          { label: 'Scan Center', path: '/warehouse/wms/scan-center' },
+          { label: 'Handheld Operations', path: '/warehouse/wms/handheld' },
+        ],
+      },
+      {
+        label: 'Express Weight Write-back',
+        items: [
+          { label: 'Weight Capture', path: '/warehouse/express-weight/capture' },
+          { label: 'Weight Review', path: '/warehouse/express-weight/review' },
+          { label: 'Express Weight Queue', path: '/warehouse/express-weight/queue' },
+          { label: 'Express Weight Sync Log', path: '/warehouse/express-weight/sync-log' },
+          { label: 'Weight Error / Retry', path: '/warehouse/express-weight/error-retry' },
+        ],
+      },
     ],
   },
   {
-    label: 'Consignment',
+    label: 'Consignment / Modern Trade',
     icon: Store,
     items: [
-      { label: 'Consignment Dashboard', path: '/consignment' },
-      { label: 'Branch Stock', path: '/consignment/branch-stock' },
+      { label: 'CONSI Dashboard', path: '/consignment' },
       { label: 'Consignment SO', path: '/consignment/so' },
+      { label: 'Branch Stock', path: '/consignment/branch-stock' },
       { label: 'Consignment Movement', path: '/consignment/movement' },
-      { label: 'Consignment Return / CN', path: '/consignment/return-cn' },
-    ],
-  },
-  {
-    label: 'Sample / Consumable',
-    icon: FlaskConical,
-    items: [
-      { label: 'Sample Request', path: '/sample-consumable/sample' },
-      { label: 'Consumable Request', path: '/sample-consumable/consumable' },
-      { label: 'Approval', path: '/sample-consumable/approval' },
-      { label: 'Issue Confirm', path: '/sample-consumable/issue' },
-      { label: 'Usage Report', path: '/sample-consumable/usage' },
+      { label: 'Sell-out Record', path: '/consignment/sell-out' },
+      { label: 'Return from Branch', path: '/consignment/return-from-branch' },
+      { label: 'CONSI Return / CN', path: '/consignment/return-cn' },
     ],
   },
   {
@@ -90,43 +110,40 @@ export const navigationGroups = [
     icon: Database,
     items: [
       { label: 'Product Master', path: '/master-data/products' },
+      { label: 'SKU Settings', path: '/master-data/sku-settings' },
+      { label: 'SKU Alias', path: '/master-data/sku-alias' },
+      { label: 'UOM Conversion', path: '/master-data/uom' },
       { label: 'Customer Master', path: '/master-data/customers' },
-      { label: 'Branch Master', path: '/master-data/branches' },
+      { label: 'Customer Branch', path: '/master-data/customer-branch' },
       { label: 'Warehouse Master', path: '/master-data/warehouses' },
       { label: 'Location Master', path: '/master-data/locations' },
-      { label: 'UOM Conversion', path: '/master-data/uom' },
-      { label: 'SKU Alias', path: '/master-data/sku-alias' },
-    ],
-  },
-  {
-    label: 'Reports',
-    icon: BarChart3,
-    items: [
-      { label: 'Sales & Stock Report', path: '/reports/sales-stock' },
-      { label: 'Shortage Report', path: '/reports/shortage' },
-      { label: 'Consignment Report', path: '/reports/consignment' },
-      { label: 'Sample Usage Report', path: '/reports/sample-usage' },
-    ],
-  },
-  {
-    label: 'Admin',
-    icon: Settings,
-    items: [
-      { label: 'Users', path: '/admin/users' },
-      { label: 'Roles & Permissions', path: '/admin/roles' },
-      { label: 'Audit Log', path: '/admin/audit' },
-      { label: 'Sync Monitor', path: '/admin/sync' },
+      { label: 'Room / Company', path: '/master-data/room-company' },
     ],
   },
 ];
 
-export const mobileNavItems = navigationGroups
-  .filter((group) => group.label !== 'Overview')
-  .slice(0, 5)
-  .map((group) => ({
-    label: group.label.split(' ')[0],
-    path: group.items[0].path,
-    icon: group.icon,
-  }));
+/** Flatten all menu items for lookup helpers */
+export function flattenNavItems(groups = navigationGroups) {
+  const items = [];
+  for (const group of groups) {
+    if (group.items) {
+      items.push(...group.items);
+    }
+    if (group.subGroups) {
+      for (const sub of group.subGroups) {
+        items.push(...sub.items);
+      }
+    }
+  }
+  return items;
+}
+
+export const mobileNavItems = [
+  { label: 'Executive', path: '/executive/management', icon: LayoutDashboard },
+  { label: 'Sales', path: '/sales/orders', icon: ShoppingCart },
+  { label: 'Planning', path: '/planning/demand', icon: CalendarRange },
+  { label: 'Warehouse', path: '/warehouse/wms', icon: Warehouse },
+  { label: 'CONSI', path: '/consignment', icon: Store },
+];
 
 export default navigationGroups;

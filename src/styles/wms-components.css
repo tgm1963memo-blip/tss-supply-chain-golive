@@ -1,0 +1,229 @@
+:root {
+  --tgd-primary-gold: #d4af37;
+  --tgd-primary-gold-hover: #bf9b2f;
+  --tgd-main-bg: #f4f5f7;
+  --tgd-surface: #ffffff;
+  --tgd-main-text: #121826;
+  --tgd-muted-text: #667085;
+  --tgd-border: #dbe1ea;
+  --tgd-success: #12b76a;
+  --tgd-warning: #f59e0b;
+  --tgd-danger: #ef4444;
+  --tgd-info: #3b82f6;
+}
+
+.page-shell {
+  max-width: 100%;
+  text-align: left;
+}
+
+.page-shell .page-header h2 {
+  color: var(--tgd-main-text);
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+.page-shell .page-header p {
+  color: var(--tgd-muted-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sprint-status {
+  background: var(--tgd-surface);
+  border: 1px solid var(--tgd-border);
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+}
+
+.btn-primary-gold {
+  background: var(--tgd-primary-gold);
+  border: 0;
+  border-radius: 7px;
+  color: #111111;
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 8px 14px;
+}
+
+.section-card {
+  background: var(--tgd-surface);
+  border: 1px solid var(--tgd-border);
+  border-radius: 10px;
+  box-shadow: 0 18px 45px rgba(9, 9, 11, 0.08);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.document-section {
+  background: var(--tgd-surface);
+  border: 1px solid var(--tgd-border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.document-section h3 {
+  margin: 0 0 16px;
+  font-size: 1.125rem;
+  color: var(--tgd-main-text);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.quantity-summary-card {
+  background: var(--tgd-main-bg);
+  border: 1px solid var(--tgd-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+}
+
+.quantity-summary-card span {
+  color: var(--tgd-muted-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.quantity-summary-card strong {
+  color: var(--tgd-main-text);
+  font-size: 1.25rem;
+}
+
+.quantity-summary-card small {
+  color: var(--tgd-muted-text);
+  font-size: 0.75rem;
+}
+
+.document-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  background: var(--tgd-surface);
+  border: 1px solid var(--tgd-border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.document-filter-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--tgd-muted-text);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+input, select, textarea, .form-control {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid var(--tgd-border);
+  width: 100%;
+}
+
+table, .tgd-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tgd-table th {
+  font-size: 0.86rem;
+  padding: 8px 10px;
+  background: var(--tgd-main-bg);
+  color: var(--tgd-muted-text);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--tgd-border);
+  text-align: left;
+}
+
+.tgd-table td {
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--tgd-border);
+  vertical-align: middle;
+}
+
+button, .btn {
+  font-size: 0.9rem;
+  height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.safety-panel h3 {
+  margin: 0 0 8px;
+}
+
+.operational-report-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.operational-report-modal {
+  background: var(--tgd-surface);
+  border-radius: 12px;
+  max-width: 960px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.operational-report-modal__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--tgd-border);
+}
+
+.operational-report-modal__body {
+  padding: 16px;
+}
+
+.operational-report-section-title {
+  font-size: 1rem;
+  margin: 0 0 12px;
+}
