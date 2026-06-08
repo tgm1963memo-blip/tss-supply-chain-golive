@@ -4,6 +4,7 @@ import Badge from '../../components/scm-ui/Badge.jsx';
 import PageHeader from '../../components/scm-ui/PageHeader.jsx';
 import TablePanel from '../../components/scm-ui/TablePanel.jsx';
 import { checkSupabaseHealth } from '../../services/system/supabaseHealthService.js';
+import { getUatPageResults, getUatStatusSummary } from '../../services/system/uatStatusService.js';
 
 function yesNo(value) {
   return value ? 'Yes' : 'No';
@@ -23,6 +24,8 @@ function formatStatusLabel(status) {
 }
 
 export default function SystemControlPage() {
+  const uatStatus = getUatStatusSummary();
+  const uatPages = getUatPageResults();
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -123,9 +126,106 @@ export default function SystemControlPage() {
         </table>
       </TablePanel>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Live Read-only UAT Status</h3>
+        <Badge type="success">Phase 3C</Badge>
+      </div>
+
+      <TablePanel>
+        <table className="tgm-table">
+          <tbody>
+            <tr>
+              <th className="w-[220px] text-left">Total pages in scope</th>
+              <td>{uatStatus.totalPages}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Passed</th>
+              <td>
+                <Badge type="success">{uatStatus.passed}</Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Failed</th>
+              <td>
+                <Badge type={uatStatus.failed > 0 ? 'danger' : 'neutral'}>{uatStatus.failed}</Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Blocked</th>
+              <td>
+                <Badge type={uatStatus.blocked > 0 ? 'warning' : 'neutral'}>{uatStatus.blocked}</Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Safe-mode active</th>
+              <td>{yesNo(uatStatus.safeModeActive)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Express write-back disabled</th>
+              <td>{yesNo(uatStatus.expressWriteBackDisabled)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Environment status</th>
+              <td>{uatStatus.environmentStatus}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Supabase health (snapshot)</th>
+              <td>
+                <Badge type={uatStatus.supabaseHealthStatus === 'ok' ? 'success' : 'warning'}>
+                  {uatStatus.supabaseHealthStatus}
+                </Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Last UAT update</th>
+              <td>{new Date(uatStatus.lastUpdated).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Tester</th>
+              <td>{uatStatus.tester}</td>
+            </tr>
+          </tbody>
+        </table>
+      </TablePanel>
+
+      <TablePanel title="UAT page results">
+        <table className="tgm-table">
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Route</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            {uatPages.map((row) => (
+              <tr key={row.route}>
+                <td>{row.page}</td>
+                <td className="font-mono text-xs">{row.route}</td>
+                <td>
+                  <Badge
+                    type={
+                      row.result === 'PASS'
+                        ? 'success'
+                        : row.result === 'BLOCKED'
+                          ? 'warning'
+                          : 'danger'
+                    }
+                  >
+                    {row.result}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TablePanel>
+
       <Alert variant="info">
         Setup guide: <code className="rounded bg-black/5 px-1">docs/09_SUPABASE_ENV_SETUP.md</code>.
         Live UAT checklist: <code className="rounded bg-black/5 px-1">docs/10_LIVE_READONLY_VALIDATION_PLAN.md</code>.
+        UAT execution: <code className="rounded bg-black/5 px-1">docs/11_LIVE_READONLY_UAT_EXECUTION.md</code>.
+        Issue log: <code className="rounded bg-black/5 px-1">docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md</code>.
       </Alert>
     </section>
   );

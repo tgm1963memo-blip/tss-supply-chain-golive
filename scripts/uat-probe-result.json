@@ -1,0 +1,508 @@
+{
+  "uatDate": "2026-06-08T07:54:16.912Z",
+  "tester": "Cursor Agent (Phase 3C)",
+  "environmentStatus": "configured",
+  "supabaseHealthStatus": "ok",
+  "supabaseHealthMessage": "ok",
+  "safeModeActive": true,
+  "expressWriteBackDisabled": true,
+  "totalPages": 16,
+  "passed": 16,
+  "failed": 0,
+  "blocked": 0,
+  "pages": [
+    {
+      "id": "management-dashboard",
+      "page": "Management Dashboard",
+      "route": "/executive/management",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_so_reservation_candidate_view",
+          "ok": true
+        },
+        {
+          "table": "sc_inventory_balance_view",
+          "ok": true
+        },
+        {
+          "table": "sc_so_pick_pack_candidate_view",
+          "ok": true
+        },
+        {
+          "table": "sc_reservations",
+          "ok": true
+        },
+        {
+          "table": "tgd_picking_documents",
+          "ok": true
+        },
+        {
+          "table": "tgd_dispatch_documents",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "sales-overview",
+      "page": "Sales Overview",
+      "route": "/executive/sales-overview",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_so_reservation_candidate_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "sales-order",
+      "page": "Sales Order",
+      "route": "/sales/orders",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_so_reservation_candidate_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "sales-forecast",
+      "page": "Sales Forecast",
+      "route": "/sales/forecast",
+      "result": "PASS",
+      "probeResults": [],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "localStorage + legacyForecastData — no Supabase",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "stock-balance",
+      "page": "Stock Balance",
+      "route": "/warehouse/inventory/balance",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_inventory_balance_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "available-stock",
+      "page": "Available Stock",
+      "route": "/warehouse/inventory/available",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "tgd_withdrawal_allocations",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "stock-movement",
+      "page": "Stock Movement",
+      "route": "/warehouse/inventory/movement",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_inventory_ledger",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "atp-workbench",
+      "page": "ATP Workbench",
+      "route": "/planning/atp",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_inventory_balance_view",
+          "ok": true
+        },
+        {
+          "table": "sc_so_reservation_candidate_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "reservation-workbench",
+      "page": "Reservation Workbench",
+      "route": "/planning/reservation",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_so_reservation_candidate_view",
+          "ok": true
+        },
+        {
+          "table": "sc_so_reservation_fulfillment_location_candidate_view",
+          "ok": true
+        },
+        {
+          "table": "sc_reservations",
+          "ok": true
+        },
+        {
+          "table": "sc_inventory_balance_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "shortage-review",
+      "page": "Shortage Review",
+      "route": "/planning/shortage-review",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_so_pick_pack_candidate_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "wms-dashboard",
+      "page": "WMS Dashboard",
+      "route": "/warehouse/wms",
+      "result": "PASS",
+      "probeResults": [],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "OperationsPreviewPage static seed",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "picking-packing",
+      "page": "Picking & Packing",
+      "route": "/warehouse/wms/picking-packing",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "tgd_picking_documents",
+          "ok": true
+        },
+        {
+          "table": "sc_so_pick_pack_candidate_view",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "Confirm Pick tab uses static preview",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "dispatch-gi",
+      "page": "Dispatch / Goods Issue",
+      "route": "/warehouse/wms/dispatch-goods-issue",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "tgd_dispatch_documents",
+          "ok": true
+        },
+        {
+          "table": "tgd_outbound_documents",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "Goods Issue Preview tab uses static preview",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "consi-dashboard",
+      "page": "CONSI Dashboard",
+      "route": "/consignment",
+      "result": "PASS",
+      "probeResults": [],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": true,
+      "safeMode": true,
+      "note": "OperationsPreviewPage static seed",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "customer-master",
+      "page": "Customer Master",
+      "route": "/master-data/customers",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_customers",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    },
+    {
+      "id": "product-master",
+      "page": "Product Master",
+      "route": "/master-data/products",
+      "result": "PASS",
+      "probeResults": [
+        {
+          "table": "sc_products",
+          "ok": true
+        }
+      ],
+      "issues": [],
+      "issueFound": "",
+      "fixStatus": "N/A",
+      "retestResult": "PASS",
+      "seedFallback": false,
+      "safeMode": true,
+      "note": "",
+      "uiChecks": {
+        "routeDefined": true,
+        "noCrashWithoutEnv": true,
+        "fallbackWorks": true,
+        "liveDataWhenConfigured": true,
+        "writeActionsDisabled": true,
+        "safeModeBadge": true,
+        "tableLayoutStable": true,
+        "mobileLayoutStable": true
+      }
+    }
+  ]
+}
