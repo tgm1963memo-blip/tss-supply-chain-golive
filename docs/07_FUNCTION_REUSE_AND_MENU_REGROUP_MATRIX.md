@@ -5,6 +5,8 @@
 > **Phase 2E (WMS Operations):** WMS operations migration completed 2026-06-08. See [WMS Operations Migration Summary](#phase-2e--wms-operations-migration-summary) below.  
 > **Phase 2F (Consignment):** Consignment module migration completed 2026-06-08. See [Consignment Migration Summary](#phase-2f--consignment-migration-summary) below.  
 > **Phase 2G (Master Data):** Master data migration completed 2026-06-08. See [Master Data Migration Summary](#phase-2g--master-data-migration-summary) below.  
+> **Phase 2I (Express Weight Write-back):** Design-only safe mode completed 2026-06-08. See [Phase 2I Summary](#phase-2i--express-weight-write-back-design-summary) and `docs/08_EXPRESS_WEIGHT_WRITEBACK_DESIGN.md`.  
+> **Phase 2H (Executive Dashboard):** Executive Dashboard migration completed 2026-06-08. See [Phase 2H Summary](#phase-2h--executive-dashboard-migration-summary) below.  
 > **Phase 2C (Planning):** Planning module migration completed 2026-06-08. See [Planning Migration Summary](#phase-2c-planning-migration-summary) below.  
 > **Target:** `tss-supply-chain-golive`  
 > **Sources:** `tss-supply-chain-management` (SCM), `TGD WMS` (WMS)
@@ -45,12 +47,12 @@ Underlying function names remain documented in rows below for migration traceabi
 
 | Final Menu Group | Sub Group | Final Menu Function | Original Function Name | Source Project | Source File | Target File | Reuse Level | Risk | Safe Mode | Express WB | Duplicate Consolidation Note | Migration Note | Status |
 |------------------|-----------|---------------------|------------------------|----------------|-------------|-------------|-------------|------|-----------|------------|------------------------------|----------------|--------|
-| Executive Dashboard | — | Management Dashboard | DashboardPage | SCM | `src/modules/reports/pages/DashboardPage.jsx` | `src/features/executive/ManagementDashboardPage.jsx` | Adapt | Low | No | No | — | Reuse KPI layout + dashboardService links | Menu Only |
-| Executive Dashboard | — | Sales Overview | ReportsPage / sales-dashboard (menu only) | SCM | `src/modules/reports/pages/ReportsPage.jsx` | `src/features/executive/SalesOverviewPage.jsx` | Adapt | Low | No | No | — | sales-dashboard route unrouted in SCM; adapt ReportsPage | Menu Only |
-| Executive Dashboard | — | Stock Overview | inventory-dashboard (menu only) | SCM | — (no page) | `src/features/executive/StockOverviewPage.jsx` | Mock Only | Low | No | No | — | Combine StockBalance summary + InventoryDashboardPage (WMS) later | Menu Only |
-| Executive Dashboard | — | Shortage Overview | shortage-risk (menu only) | SCM | — (no page) | `src/features/executive/ShortageOverviewPage.jsx` | Mock Only | Medium | No | No | — | Build from reservation shortage data | Menu Only |
-| Executive Dashboard | — | Order Fulfillment | DashboardPage KPI links | SCM | `src/modules/reports/pages/DashboardPage.jsx` | `src/features/executive/OrderFulfillmentPage.jsx` | Adapt | Medium | No | No | — | Pipeline view SO → pick → dispatch | Menu Only |
-| Executive Dashboard | — | CONSI Overview | OperationsPreviewPage (modern-trade-stock) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/executive/CONSIOverviewPage.jsx` | Adapt | Medium | No | No | — | Preview key: modern-trade-stock | Menu Only |
+| Executive Dashboard | — | Management Dashboard | DashboardPage | SCM | `src/modules/reports/pages/DashboardPage.jsx` + `dashboardService.js` | `src/features/executive/ManagementDashboardPage.jsx` | Adapt | Low | Yes | No | — | Aggregated KPIs + pipeline from live Supabase views; read-only safe mode | **Migrated** |
+| Executive Dashboard | — | Sales Overview | ReportsPage / sales-dashboard (menu only) | SCM | `src/modules/reports/pages/ReportsPage.jsx` + `dashboardService.js` (`getSalesDashboardMetrics`) | `src/features/executive/SalesOverviewPage.jsx` | Adapt | Low | Yes | No | — | Same Sales Dashboard tab as Sales module overview | **Migrated** |
+| Executive Dashboard | — | Stock Overview | ReportsPage inventory tab | SCM | `ReportsPage.jsx` + `dashboardService.js` (`getInventoryDashboardMetrics`) | `src/features/executive/StockOverviewPage.jsx` | Adapt | Low | Yes | No | — | sc_inventory_balance_view summary + shortage lists | **Migrated** |
+| Executive Dashboard | — | Shortage Overview | shortage-risk / demandPlanningService | SCM | `demandPlanningService.js` (`onlyShortage`) | `src/features/executive/ShortageOverviewPage.jsx` | Adapt | Medium | Yes | No | — | Executive shortage KPIs + top lines table | **Migrated** |
+| Executive Dashboard | — | Order Fulfillment | DashboardPage KPI links / pipeline | SCM | `DashboardPage.jsx` + reservation/picking/WMS services | `src/features/executive/OrderFulfillmentPage.jsx` | Adapt | Medium | Yes | No | — | SO → reservation → pick → dispatch pipeline read-only | **Migrated** |
+| Executive Dashboard | — | CONSI Overview | OperationsPreviewPage (modern-trade-stock) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/executive/CONSIOverviewPage.jsx` | Adapt | Medium | Yes | No | — | modern-trade-stock preview; import-ready structure only | **Migrated** |
 | Sales | — | Sales Order | ReservationPage SO Candidates / listSalesOrderReservationCandidates | SCM | `src/modules/reservation/pages/ReservationPage.jsx`, `src/modules/reservation/services/reservationSourceService.js` | `src/features/sales/SalesOrderListPage.jsx` | Adapt | Low | No | No | — | Read-only SO lines from sc_so_reservation_candidate_view | **Migrated** |
 | Sales | — | Sales Order Detail | getSalesOrderLines (same view) | SCM | `src/modules/reservation/services/reservationSourceService.js` | `src/features/sales/SalesOrderDetailPage.jsx` | Adapt | Low | No | No | — | Detail by documentNo route param | **Migrated** |
 | Sales | — | Sales Forecast | pgForecast (legacy TGM) | Legacy | `IT/Code old project/tgm-supplychain/index.html` (`pgForecast`, `_renderFcGrid`) | `src/features/sales/SalesForecastPage.jsx` | Adapt | Low | No | No | — | Migrated from legacy Sales Forecast UI | **Migrated** |
@@ -81,11 +83,11 @@ Underlying function names remain documented in rows below for migration traceabi
 | Warehouse | WMS Operations | Dispatch / Goods Issue | OperationsPreviewPage (dispatch, goods-issue), DispatchPage, OutboundListPage | SCM + WMS | `src/modules/operations-preview/...`, `src/features/operations/DispatchPage.jsx`, `src/features/operations/outbound/OutboundListPage.jsx` | `src/features/warehouse/wms/DispatchGoodsIssuePage.jsx` | Adapt | High | Yes | No | **Consolidated:** Dispatch + Goods Issue | Merge dispatch history + outbound posting UI | **Migrated** |
 | Warehouse | WMS Operations | Scan Center | BarcodeScanPage / HandheldPage | Golive + WMS | `src/features/wms/BarcodeScanPage.jsx`, `src/features/handheld/HandheldPage.jsx` | `src/features/warehouse/wms/ScanCenterPage.jsx` | Adapt | Low | No | No | **Consolidated:** Barcode Scan → Scan Center | Reuse WMS HandheldPage scan hub | **Migrated** |
 | Warehouse | WMS Operations | Handheld Operations | HandheldPage, handheldReceivingService, handheldPutawayService | WMS | `src/features/handheld/HandheldPage.jsx`, `src/services/handheldReceivingService.js`, `src/services/handheldPutawayService.js` | `src/features/warehouse/wms/HandheldOperationsPage.jsx` | Adapt | Medium | Yes | No | **Consolidated:** Handheld Receiving + Handheld Putaway | Single mobile entry with mode selector | **Migrated** |
-| Warehouse | Express Weight Write-back | Weight Capture | — | SCM (preview) | `src/modules/operations-preview/...` (express-queue preview only) | `src/features/warehouse/express-weight/WeightCapturePage.jsx` | Mock Only | High | Yes | Yes | — | No capture page in sources — DESIGN ONLY | Menu Only |
-| Warehouse | Express Weight Write-back | Weight Review | — | — | — | `src/features/warehouse/express-weight/WeightReviewPage.jsx` | Mock Only | High | Yes | Yes | — | DESIGN ONLY — no DBF write | Menu Only |
-| Warehouse | Express Weight Write-back | Express Weight Queue | OperationsPreviewPage (express-queue) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/warehouse/express-weight/ExpressWeightQueuePage.jsx` | Adapt | High | Yes | Yes | — | Preview only in SCM; enforce SAFE MODE | Menu Only |
-| Warehouse | Express Weight Write-back | Express Weight Sync Log | — | — | — | `src/features/warehouse/express-weight/ExpressWeightSyncLogPage.jsx` | Mock Only | High | Yes | Yes | — | DESIGN ONLY | Menu Only |
-| Warehouse | Express Weight Write-back | Weight Error / Retry | — | — | — | `src/features/warehouse/express-weight/WeightErrorRetryPage.jsx` | Mock Only | High | Yes | Yes | — | DESIGN ONLY — retry queue pattern TBD | Menu Only |
+| Warehouse | Express Weight Write-back | Weight Capture | — | SCM (preview) | Design-only (`expressWeightService.js`) | `src/features/warehouse/express-weight/WeightCapturePage.jsx` | Design Only | High | Yes | Yes | — | Capture form + localStorage draft; no DBF write | **Design Only** |
+| Warehouse | Express Weight Write-back | Weight Review | — | Design | `expressWeightService.js` | `src/features/warehouse/express-weight/WeightReviewPage.jsx` | Design Only | High | Yes | Yes | — | Approve/Reject/Queue safe-mode only | **Design Only** |
+| Warehouse | Express Weight Write-back | Express Weight Queue | OperationsPreviewPage (express-queue) | SCM + Design | `operationsExtensionService.js` + `expressWeightService.js` | `src/features/warehouse/express-weight/ExpressWeightQueuePage.jsx` | Design Only | High | Yes | Yes | — | Queue structure from SCM preview; no sync execution | **Design Only** |
+| Warehouse | Express Weight Write-back | Express Weight Sync Log | — | Design | `expressWeightService.js` | `src/features/warehouse/express-weight/ExpressWeightSyncLogPage.jsx` | Design Only | High | Yes | Yes | — | Read-only sync log structure | **Design Only** |
+| Warehouse | Express Weight Write-back | Weight Error / Retry | — | Design | `expressWeightService.js` | `src/features/warehouse/express-weight/WeightErrorRetryPage.jsx` | Design Only | High | Yes | Yes | — | Retry/Cancel safe-mode only; see docs/08 | **Design Only** |
 | Consignment / Modern Trade | — | CONSI Dashboard | OperationsPreviewPage (modern-trade-stock) / ConsiPage | SCM | `src/modules/operations-preview/...`, `src/modules/consi/pages/ConsiPage.jsx` | `src/features/consignment/ConsignmentDashboardPage.jsx` | Adapt | Medium | No | No | — | modern-trade-stock preview is closest | **Migrated** |
 | Consignment / Modern Trade | — | Consignment SO | ConsiPage | SCM | `src/modules/consi/pages/ConsiPage.jsx` | `src/features/consignment/ConsignmentSOPage.jsx` | Adapt | Medium | No | No | — | ConsiPage placeholder mentions SO detection | **Migrated** |
 | Consignment / Modern Trade | — | Branch Stock | OperationsPreviewPage (modern-trade-stock) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/consignment/BranchStockPage.jsx` | Adapt | Low | No | No | — | Preview: branch stock by customer/SKU | **Migrated** |
@@ -284,6 +286,42 @@ Underlying function names remain documented in rows below for migration traceabi
 
 - `src/services/master-data/productService.js`, `customerService.js`, `warehouseService.js`, `uomService.js`
 - `src/components/master-data/ProductForm.jsx`, `ProductTable.jsx`
+
+---
+
+## Phase 2H — Executive Dashboard Migration Summary
+
+| Function Name | Source File | Target File | Migration Status | Blocker | Notes |
+|---------------|-------------|-------------|------------------|---------|-------|
+| Management Dashboard | `DashboardPage.jsx` + `executiveDashboardService.js` (aggregates sales/inventory/demand/reservation/WMS) | `src/features/executive/ManagementDashboardPage.jsx` | **Migrated** | Requires Supabase env for live KPIs | SCM layout preserved; operation cards link to golive routes |
+| Sales Overview | `ReportsPage.jsx` + `dashboardService.js` (`getSalesDashboardMetrics`) | `src/features/executive/SalesOverviewPage.jsx` | **Migrated** | Requires Supabase env | Same UI as Sales module overview |
+| Stock Overview | `ReportsPage.jsx` + `getInventoryDashboardMetrics` | `src/features/executive/StockOverviewPage.jsx` | **Migrated** | Requires Supabase env | sc_inventory_balance_view; shortage/low-stock tables |
+| Shortage Overview | `demandPlanningService.js` (`onlyShortage`) | `src/features/executive/ShortageOverviewPage.jsx` | **Migrated** | Requires Supabase env | Executive shortage KPIs + top 15 lines |
+| Order Fulfillment | `DashboardPage.jsx` pipeline + reservation/picking/WMS services | `src/features/executive/OrderFulfillmentPage.jsx` | **Migrated** | Requires Supabase env | Read-only SO → dispatch pipeline |
+| CONSI Overview | `OperationsPreviewPage.jsx` (`modern-trade-stock`) | `src/features/executive/CONSIOverviewPage.jsx` | **Migrated** | None — static preview | Import-ready CONSI structure; no settlement write-back |
+
+### Infrastructure added (Phase 2H)
+
+- `src/services/executive/executiveDashboardService.js` — aggregates `dashboardService`, `stockBalanceService`, `demandPlanningService`, `reservationService`, `pickListCandidateService`, WMS picking/dispatch lists
+- `OperationsPreviewPage.jsx` — optional `pageTitle` / `pageDescription` props for executive CONSI view
+
+---
+
+## Phase 2I — Express Weight Write-back Design Summary
+
+| Function Name | Source File | Target File | Migration Status | Blocker | Notes |
+|---------------|-------------|-------------|------------------|---------|-------|
+| Weight Capture | Design-only (`expressWeightService.js`) | `src/features/warehouse/express-weight/WeightCapturePage.jsx` | **Design Only** | Governance sign-off required before production | localStorage drafts; SO/Pick/weight fields |
+| Weight Review | Design-only service | `src/features/warehouse/express-weight/WeightReviewPage.jsx` | **Design Only** | Same | Tolerance compare; Approve/Reject/Queue safe-mode |
+| Express Weight Queue | SCM `express-queue` preview + design service | `src/features/warehouse/express-weight/ExpressWeightQueuePage.jsx` | **Design Only** | Local Sync Service not built | Queue table; no sync execution |
+| Express Weight Sync Log | Design-only service | `src/features/warehouse/express-weight/ExpressWeightSyncLogPage.jsx` | **Design Only** | Production audit table TBD | Read-only log structure |
+| Weight Error / Retry | Design-only service | `src/features/warehouse/express-weight/WeightErrorRetryPage.jsx` | **Design Only** | Express connection TBD | Retry/Cancel/Mark Reviewed safe-mode |
+
+### Infrastructure added (Phase 2I)
+
+- `src/services/expressWeight/expressWeightService.js` — `EXPRESS_WEIGHT_SAFE_MODE = true`, localStorage mock, all write functions return safe-mode responses
+- `src/features/warehouse/express-weight/components/ExpressWeightLayout.jsx` — shared safe-mode banner and layout
+- `docs/08_EXPRESS_WEIGHT_WRITEBACK_DESIGN.md` — workflow, governance, queue, rollback, audit requirements
 
 ---
 

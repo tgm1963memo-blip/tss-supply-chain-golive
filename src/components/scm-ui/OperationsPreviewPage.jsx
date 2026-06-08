@@ -19,7 +19,13 @@ function FilterPill({ label }) {
   );
 }
 
-export default function OperationsPreviewPage({ previewKey, defaultTab, backPath = '/sales/overview' }) {
+export default function OperationsPreviewPage({
+  previewKey,
+  defaultTab,
+  backPath = '/sales/overview',
+  pageTitle,
+  pageDescription,
+}) {
   const data = getOperationsExtensionModule(previewKey);
   const initialTab = defaultTab || data.tabs?.[0]?.id || 'main';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -31,8 +37,8 @@ export default function OperationsPreviewPage({ previewKey, defaultTab, backPath
   return (
     <section className="tgm-page">
       <PageHeader
-        title={data.title}
-        description={data.description}
+        title={pageTitle || data.title}
+        description={pageDescription || data.description}
         actions={<Badge type="neutral">{data.badge}</Badge>}
       />
 
