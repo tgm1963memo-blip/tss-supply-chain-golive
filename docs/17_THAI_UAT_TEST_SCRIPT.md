@@ -134,6 +134,26 @@
 
 ---
 
+## การทดสอบด้วยข้อมูลจริงจาก Express
+
+**เงื่อนไข:** ต้องรัน Express read-only sync ตาม `docs/20_EXPRESS_READONLY_SYNC_SETUP.md` และตรวจสอบข้อมูลตาม `docs/21_EXPRESS_SYNC_UAT_VALIDATION.md` ก่อนทำรายการด้านล่าง
+
+**Room code:** TSS (ค่าเริ่มต้น)
+
+| ลำดับ | หัวข้อทดสอบ | Expected Result | Actual Result | PASS / FAIL / BLOCKED | หมายเหตุ |
+|---|---|---|---|---|---|
+| E.1 | Sync ข้อมูล Express → Supabase | รัน sync ครบ STMAS, ARMAS, STLOC, OESO, OESOIT, ARTRN สำเร็จ และ System Control แสดงจำนวนแถว > 0 | | | |
+| E.2 | Product Master (STMAS) | หน้า Product Master แสดงรหัส/ชื่อสินค้าจาก Express ตรงกับตัวอย่างใน DBF | | | |
+| E.3 | Customer Master (ARMAS) | หน้า Customer Master แสดงรหัส/ชื่อลูกค้าจาก Express | | | |
+| E.4 | Stock Balance (STLOC) | หน้า Stock Balance แสดงยอดคงเหลือจาก Express (ตรวจสอบ SKU ตัวอย่าง 1–2 รายการ) | | | |
+| E.5 | Sales Order (OESO + OESOIT) | รายการใบสั่งขายและรายละเอียดบรรทัดแสดงเลขที่เอกสารและจำนวนจาก Express | | | |
+| E.6 | ตรวจสอบ Read-only / Safe Mode | ไม่มีการบันทึกกลับ Express, ไม่มี stock posting, Express Weight ยังเป็น DESIGN ONLY | | | |
+| E.7 | Failed records / Sync status | `sync_failed_records` = 0 หรือมีเหตุผลที่ยอมรับได้ และ Express Sync Status บน System Control ตรงกับ SQL | | | |
+
+**หมายเหตุ:** รายการ E.1–E.7 ต้องผ่านก่อน Sign-off ด้านล่าง (หรือมี BLOCKED ที่บันทึกใน `docs/18_THAI_UAT_ISSUE_LOG.md`)
+
+---
+
 ## Sign-off
 
 ผู้ทดสอบ: ___________________________
