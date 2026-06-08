@@ -5,6 +5,7 @@
 > **Phase 2E (WMS Operations):** WMS operations migration completed 2026-06-08. See [WMS Operations Migration Summary](#phase-2e--wms-operations-migration-summary) below.  
 > **Phase 2F (Consignment):** Consignment module migration completed 2026-06-08. See [Consignment Migration Summary](#phase-2f--consignment-migration-summary) below.  
 > **Phase 2G (Master Data):** Master data migration completed 2026-06-08. See [Master Data Migration Summary](#phase-2g--master-data-migration-summary) below.  
+> **Phase 2J (Remaining Pages):** Read-only/suggestion pages completed 2026-06-08. See [Phase 2J Summary](#phase-2j--remaining-pages-summary) below.  
 > **Phase 2I (Express Weight Write-back):** Design-only safe mode completed 2026-06-08. See [Phase 2I Summary](#phase-2i--express-weight-write-back-design-summary) and `docs/08_EXPRESS_WEIGHT_WRITEBACK_DESIGN.md`.  
 > **Phase 2H (Executive Dashboard):** Executive Dashboard migration completed 2026-06-08. See [Phase 2H Summary](#phase-2h--executive-dashboard-migration-summary) below.  
 > **Phase 2C (Planning):** Planning module migration completed 2026-06-08. See [Planning Migration Summary](#phase-2c-planning-migration-summary) below.  
@@ -59,15 +60,15 @@ Underlying function names remain documented in rows below for migration traceabi
 | Sales | — | Sales Overview | ReportsPage sales tab / getSalesDashboardMetrics | SCM | `src/modules/reports/pages/ReportsPage.jsx`, `src/modules/reports/services/dashboardService.js` | `src/features/sales/SalesOverviewPage.jsx` | Adapt | Low | No | No | — | Live KPIs when Supabase configured | **Migrated** |
 | Sales | — | Return / CN | OperationsPreviewPage (cn-return) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/sales/ReturnCNPage.jsx` | Adapt | Medium | No | No | — | Static preview structure; no write-back | **Migrated** |
 | Sales | — | Customer Registration | CustomerRegistrationPage (PlaceholderCard) | SCM | `src/modules/customer-registration/pages/CustomerRegistrationPage.jsx` | `src/features/sales/CustomerRegistrationPage.jsx` | Adapt | Low | No | No | — | Same PlaceholderCard stub as SCM | **Migrated** |
-| Sales | — | Customer Map | — | — | — | `src/features/sales/CustomerMapPage.jsx` | Mock Only | Low | No | No | — | No source in SCM or WMS | **Mock Only** |
+| Sales | — | Customer Map | — (planning tool) | Design | `customerMapService.js` + customer master | `src/features/sales/CustomerMapPage.jsx` | Adapt | Low | Yes | No | — | Zone/province planning; map placeholder; read-only | **Implemented** |
 | Sales | — | Sample & Consumable | OperationsPreviewPage (issue-request) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/sales/SampleConsumablePage.jsx` | Adapt | Low | No | No | Merged Sample Request + Consumable | issue-request preview key | **Migrated** |
 | Planning & Allocation | — | Demand Planning | DemandPlanningPage | SCM | `src/modules/sales/pages/DemandPlanningPage.jsx` | `src/features/planning/DemandPlanPage.jsx` | Direct | Low | No | No | — | Full implementation with demandPlanningService | **Migrated** |
 | Planning & Allocation | — | Stock & Planning | stock-planning (menu) / PlanningPage | SCM | `src/modules/planning/pages/PlanningPage.jsx` | `src/features/planning/StockPlanningPage.jsx` | Adapt | Medium | No | No | — | PlanningPage is placeholder | **Migrated** |
-| Planning & Allocation | — | ATP Workbench | — | — | — | `src/features/planning/ATPWorkbenchPage.jsx` | Mock Only | High | No | No | — | No ATP page in either source — design first | **Mock Only** |
+| Planning & Allocation | — | ATP Workbench | ATP formula + inventory/SO services | Design | `atpWorkbenchService.js` + `stockBalanceService`, `reservationSourceService` | `src/features/planning/ATPWorkbenchPage.jsx` | Adapt | High | Yes | No | — | ATP = On Hand − Reserved − Pending SO; read-only | **Implemented** |
 | Planning & Allocation | — | Reservation Workbench | ReservationPage | SCM | `src/modules/reservation/pages/ReservationPage.jsx` | `src/features/sales/ReservationWorkbenchPage.jsx` | Direct | High | Yes | No | Moved from Sales menu to Planning | createReservation OK; release disabled safe mode | **Migrated** |
 | Planning & Allocation | — | Shortage Review | shortage-risk (menu only) | SCM | `demandPlanningService.js` (`onlyShortage`) | `src/features/planning/ShortageReviewPage.jsx` | Adapt | Medium | No | No | Renamed from Shortage Alerts | Derived from sc_so_pick_pack_candidate_view shortage filter | **Migrated** |
 | Planning & Allocation | — | Reservation Summary | ReservationPage (summary tab) | SCM | `src/modules/reservation/pages/ReservationPage.jsx` | `src/features/planning/ReservationSummaryPage.jsx` | Adapt | Medium | No | No | — | Read-only listReservations summary | **Migrated** |
-| Planning & Allocation | — | Production / Purchase Suggestion | production-planning (menu only) | Legacy | `IT/Code old project/tgm-supplychain/index.html` (`pgPlanStock`, `pgProdPlan`) | `src/features/planning/ProductionPurchaseSuggestionPage.jsx` | Mock Only | Medium | No | No | — | Legacy source too large (~250+ lines, AI/PO write-back); mock retained with note | **Mock Only** |
+| Planning & Allocation | — | Production / Purchase Suggestion | Legacy pgPlanStock (read-only subset) | Legacy + Design | `productionPurchaseSuggestionService.js` + forecast/stock/shortage | `src/features/planning/ProductionPurchaseSuggestionPage.jsx` | Adapt | Medium | Yes | No | — | Suggestion only; no PO/production creation | **Implemented** |
 | Warehouse | Inventory Control | Stock Balance | StockBalancePage | SCM | `src/modules/warehouse/pages/StockBalancePage.jsx` | `src/features/inventory/StockBalancePage.jsx` | Direct | Low | No | No | — | Also similar in WMS reports; prefer SCM service | **Migrated** |
 | Warehouse | Inventory Control | Available Stock | AllocationsPage (partial) | WMS | `src/features/operations/AllocationsPage.jsx` | `src/features/warehouse/inventory/AvailableStockPage.jsx` | Adapt | Medium | No | No | — | WMS allocations ≈ available/reserved view | **Migrated** |
 | Warehouse | Inventory Control | Stock Movement | StockMovementPage | SCM | `src/modules/warehouse/pages/StockMovementPage.jsx` | `src/features/inventory/StockMovementPage.jsx` | Direct | Low | No | No | — | stockMovementService read-only | **Migrated** |
@@ -100,10 +101,10 @@ Underlying function names remain documented in rows below for migration traceabi
 | Master Data | — | SKU Alias | OperationsPreviewPage (product-mapping) | SCM | `src/modules/operations-preview/pages/OperationsPreviewPage.jsx` | `src/features/master-data/SKUAliasPage.jsx` | Adapt | Low | No | No | — | Alias section in product-mapping preview | **Migrated** |
 | Master Data | — | UOM Conversion | UomConversionPage | SCM | `src/modules/master-data/pages/UomConversionPage.jsx` | `src/features/master-data/UOMConversionPage.jsx` | Direct | Low | No | No | — | uomService full impl | **Migrated** |
 | Master Data | — | Customer Master | CustomerMasterPage | SCM | `src/modules/master-data/pages/CustomerMasterPage.jsx` | `src/features/master-data/CustomerMasterPage.jsx` | Direct | Low | No | No | — | Exists but unrouted in SCM | **Migrated** |
-| Master Data | — | Customer Branch | customer-branch-stock (menu) / BranchMasterPage | SCM | —, `src/modules/master-data/pages/` (BranchMaster renamed) | `src/features/master-data/CustomerBranchPage.jsx` | Adapt | Low | No | No | Renamed from Branch Master | customer-branch-stock menu item | **Mock Only** |
+| Master Data | — | Customer Branch | customer-branch-stock (menu) | Design | `customerBranchService.js` | `src/features/master-data/CustomerBranchPage.jsx` | Adapt | Low | Yes | No | Renamed from Branch Master | Master preview seed + Supabase customer merge | **Implemented** |
 | Master Data | — | Warehouse Master | WarehouseMasterPage | SCM + WMS | `src/modules/master-data/pages/WarehouseMasterPage.jsx`, `src/features/master/WarehousesPage.jsx` | `src/features/master-data/WarehouseMasterPage.jsx` | Direct | Low | No | No | — | SCM unrouted; WMS has full page | **Migrated** |
 | Master Data | — | Location Master | — / LocationsPage | WMS | `src/features/master/LocationsPage.jsx` | `src/features/master-data/LocationMasterPage.jsx` | Direct | Low | No | No | — | WMS LocationsPage | **Migrated** |
-| Master Data | — | Room / Company | — | — | — | `src/features/master-data/RoomCompanyPage.jsx` | Mock Only | Low | No | No | — | Cold room filter in SCM StockBalancePage — extract config | **Mock Only** |
+| Master Data | — | Room / Company | SCM room_code filter pattern | Design | `roomCompanyService.js` | `src/features/master-data/RoomCompanyPage.jsx` | Adapt | Low | Yes | No | — | System config preview; read-only seed | **Implemented** |
 
 ---
 
@@ -180,7 +181,7 @@ Underlying function names remain documented in rows below for migration traceabi
 | Sales Overview | `ReportsPage.jsx` + `dashboardService.js` (`getSalesDashboardMetrics`) | `src/features/sales/SalesOverviewPage.jsx` | **Migrated** | Requires Supabase env for live KPIs | No auth gate (SCM required login) |
 | Return / CN | `operations-preview/OperationsPreviewPage.jsx` + `operationsExtensionService.js` (`cn-return`) | `src/features/sales/ReturnCNPage.jsx` | **Migrated** | None — static preview | No Express write-back |
 | Customer Registration | `customer-registration/CustomerRegistrationPage.jsx` | `src/features/sales/CustomerRegistrationPage.jsx` | **Migrated** | Wizard not built in source | Same PlaceholderCard as SCM |
-| Customer Map | — | `src/features/sales/CustomerMapPage.jsx` | **Mock Only** | No source function | Kept MockupPageShell fallback |
+| Customer Map | `customerMapService.js` | `src/features/sales/CustomerMapPage.jsx` | **Implemented** | No geodata/map SDK | Read-only planning tool; zone/province table |
 | Sample & Consumable | `OperationsPreviewPage.jsx` (`issue-request`) | `src/features/sales/SampleConsumablePage.jsx` | **Migrated** | None — static preview | Replaces separate sample-consumable mock pages |
 
 ---
@@ -194,8 +195,8 @@ Underlying function names remain documented in rows below for migration traceabi
 | Reservation Workbench | `ReservationPage.jsx` + `reservationService.js` + `inventoryService.js` | `src/features/sales/ReservationWorkbenchPage.jsx` | **Migrated** | Requires Supabase env + RPC | Safe mode: create OK, release disabled |
 | Shortage Review | `demandPlanningService.js` (`onlyShortage`) | `src/features/planning/ShortageReviewPage.jsx` | **Migrated** | Requires Supabase env | Read-only shortage lines table |
 | Reservation Summary | `ReservationPage.jsx` / `listReservations` | `src/features/planning/ReservationSummaryPage.jsx` | **Migrated** | Requires Supabase env | Read-only summary KPIs + list |
-| ATP Workbench | — | `src/features/planning/ATPWorkbenchPage.jsx` | **Mock Only** | No source page | Kept MockupPageShell fallback |
-| Production / Purchase Suggestion | Legacy `tgm-supplychain/index.html` (`pgPlanStock`, `pgProdPlan`) | `src/features/planning/ProductionPurchaseSuggestionPage.jsx` | **Mock Only** | Legacy too large for sprint | ~250+ lines each with AI/PO write-back; note in mock |
+| ATP Workbench | `atpWorkbenchService.js` | `src/features/planning/ATPWorkbenchPage.jsx` | **Implemented** | Requires Supabase for live ATP | Read-only; ATP = On Hand − Reserved − Pending SO |
+| Production / Purchase Suggestion | `productionPurchaseSuggestionService.js` | `src/features/planning/ProductionPurchaseSuggestionPage.jsx` | **Implemented** | Suggestion only | No PO/production order creation |
 
 ### Infrastructure added (Phase 2A)
 
@@ -277,10 +278,10 @@ Underlying function names remain documented in rows below for migration traceabi
 | SKU Alias | `product-mapping` preview | `src/features/master-data/SKUAliasPage.jsx` | **Migrated** | None — static preview | defaultTab: alias |
 | UOM Conversion | `UomConversionPage.jsx` + `uomService.js` | `src/features/master-data/UOMConversionPage.jsx` | **Migrated** | Requires Supabase env | Full SCM page with upsert/deactivate |
 | Customer Master | `CustomerMasterPage.jsx` + `customerService.js` | `src/features/master-data/CustomerMasterPage.jsx` | **Migrated** | Requires Supabase env | Read-only list + detail panel |
-| Customer Branch | — | `src/features/master-data/CustomerBranchPage.jsx` | **Mock Only** | No SCM branch master page | MockupPageShell retained |
+| Customer Branch | `customerBranchService.js` | `src/features/master-data/CustomerBranchPage.jsx` | **Implemented** | Seed data; no branch CRUD | Master preview read-only |
 | Warehouse Master | `WarehouseMasterPage.jsx` + `warehouseService.js` | `src/features/master-data/WarehouseMasterPage.jsx` | **Migrated** | Requires Supabase env | SCM preferred over WMS WarehousesPage |
 | Location Master | `TGD WMS/.../LocationsPage.jsx` + `masterDataService.js` | `src/features/master-data/LocationMasterPage.jsx` | **Migrated** | Requires Supabase + `tgd_locations` | Read-only WMS location list |
-| Room / Company | — | `src/features/master-data/RoomCompanyPage.jsx` | **Mock Only** | No approved source | MockupPageShell retained |
+| Room / Company | `roomCompanyService.js` | `src/features/master-data/RoomCompanyPage.jsx` | **Implemented** | Config seed only | System config preview read-only |
 
 ### Infrastructure added (Phase 2G)
 
@@ -322,6 +323,26 @@ Underlying function names remain documented in rows below for migration traceabi
 - `src/services/expressWeight/expressWeightService.js` — `EXPRESS_WEIGHT_SAFE_MODE = true`, localStorage mock, all write functions return safe-mode responses
 - `src/features/warehouse/express-weight/components/ExpressWeightLayout.jsx` — shared safe-mode banner and layout
 - `docs/08_EXPRESS_WEIGHT_WRITEBACK_DESIGN.md` — workflow, governance, queue, rollback, audit requirements
+
+---
+
+## Phase 2J — Remaining Pages Summary
+
+| Function Name | Source File | Target File | Status | Blocker | Notes |
+|---------------|-------------|-------------|--------|---------|-------|
+| Customer Map | `customerMapService.js` | `src/features/sales/CustomerMapPage.jsx` | **Implemented** | No map SDK | Read-only planning tool; zone/province grouping |
+| ATP Workbench | `atpWorkbenchService.js` | `src/features/planning/ATPWorkbenchPage.jsx` | **Implemented** | Supabase for live data | Read-only; ATP = On Hand − Reserved − Pending SO |
+| Production / Purchase Suggestion | `productionPurchaseSuggestionService.js` | `src/features/planning/ProductionPurchaseSuggestionPage.jsx` | **Implemented** | Suggestion only | No PO or production order creation |
+| Customer Branch | `customerBranchService.js` | `src/features/master-data/CustomerBranchPage.jsx` | **Implemented** | Seed master preview | Read-only branch table |
+| Room / Company | `roomCompanyService.js` | `src/features/master-data/RoomCompanyPage.jsx` | **Implemented** | Config seed only | System config preview read-only |
+
+### Infrastructure added (Phase 2J)
+
+- `src/services/customerMap/customerMapService.js`
+- `src/services/atp/atpWorkbenchService.js`
+- `src/services/planning/productionPurchaseSuggestionService.js`
+- `src/services/master-data/customerBranchService.js`
+- `src/services/admin/roomCompanyService.js`
 
 ---
 
