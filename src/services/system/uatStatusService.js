@@ -1,10 +1,10 @@
 /**
- * Live read-only UAT status — Phase 3C automated pass + Phase 3D–3E human sign-off tracking.
+ * Live read-only UAT status — Phase 3C automated pass + Phase 3D–3F human sign-off tracking.
  */
 export const UAT_SCOPE_PAGES = 16;
 
 export const UAT_STATUS = {
-  lastUpdated: '2026-06-08T14:00:00.000Z',
+  lastUpdated: '2026-06-08T16:00:00.000Z',
   tester: 'Cursor Agent (Phase 3C)',
   environmentStatus: 'configured',
   supabaseHealthStatus: 'ok',
@@ -20,6 +20,7 @@ export const UAT_STATUS = {
     plan: 'docs/10_LIVE_READONLY_VALIDATION_PLAN.md',
     humanSignoff: 'docs/13_HUMAN_UAT_SIGNOFF.md',
     decisionRegister: 'docs/14_GOLIVE_DECISION_REGISTER.md',
+    readinessChecklist: 'docs/15_GOLIVE_READINESS_CHECKLIST.md',
   },
 };
 
@@ -30,10 +31,14 @@ export const HUMAN_UAT_STATUS = {
   decision: 'pending',
   reservationGovernance: 'pending',
   reservationGovernanceRecommended: 'B',
+  recommendedDecision: 'GO_WITH_LIMITATION',
+  recommendedReservationGovernance: 'B',
+  recommendedWmsConsiDecision: 'ACCEPT_WITH_LIMITATION',
   openIssues: ['UAT-004'],
-  lastUpdated: '2026-06-08T14:00:00.000Z',
+  lastUpdated: '2026-06-08T16:00:00.000Z',
   signoffDocument: 'docs/13_HUMAN_UAT_SIGNOFF.md',
   decisionRegister: 'docs/14_GOLIVE_DECISION_REGISTER.md',
+  readinessChecklist: 'docs/15_GOLIVE_READINESS_CHECKLIST.md',
   openNonBlockingIssues: [
     {
       id: 'UAT-004',
@@ -45,7 +50,7 @@ export const HUMAN_UAT_STATUS = {
     {
       id: 'UAT-003',
       pages: 'WMS Dashboard, CONSI Dashboard',
-      summary: 'Preview-only static data — live Supabase feeds deferred to Phase 4+ (DEC-003)',
+      summary: 'Preview-only static data — recommended accept with limitation (DEC-003)',
     },
   ],
   closedIssues: ['UAT-001', 'UAT-002'],

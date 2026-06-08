@@ -34,6 +34,11 @@ function formatDecisionLabel(value) {
   return String(value).replace(/_/g, ' ').toUpperCase();
 }
 
+function formatRecommendedLabel(value) {
+  if (!value) return '—';
+  return String(value).replace(/_/g, ' ').toUpperCase();
+}
+
 function governanceLabel(value, recommended) {
   if (!value || value === 'pending') {
     return recommended ? `Pending (recommended: Option ${recommended})` : 'Pending';
@@ -212,6 +217,55 @@ export default function SystemControlPage() {
       </TablePanel>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Recommended go-live position</h3>
+        <Badge type="info">Phase 3F</Badge>
+      </div>
+
+      <TablePanel>
+        <table className="tgm-table">
+          <tbody>
+            <tr>
+              <th className="w-[220px] text-left">Recommended decision</th>
+              <td>
+                <Badge type="info">{formatRecommendedLabel(humanUat.recommendedDecision)}</Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Final human decision</th>
+              <td>
+                <Badge type={humanUat.decision === 'pending' ? 'warning' : 'success'}>
+                  {formatDecisionLabel(humanUat.decision)}
+                </Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Reservation governance (recommended)</th>
+              <td className="text-sm text-[var(--color-text-muted)]">
+                Option {humanUat.recommendedReservationGovernance} — Planner draft; manager activate/release/cancel
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">WMS/CONSI limitation (recommended)</th>
+              <td className="text-sm text-[var(--color-text-muted)]">
+                {formatRecommendedLabel(humanUat.recommendedWmsConsiDecision)}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Express Weight</th>
+              <td>
+                <Badge type="success">Disabled</Badge>
+                <span className="ml-2 text-sm text-[var(--color-text-muted)]">DEC-002 approved</span>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Readiness checklist</th>
+              <td className="font-mono text-xs">{humanUat.readinessChecklist}</td>
+            </tr>
+          </tbody>
+        </table>
+      </TablePanel>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Human UAT Sign-off</h3>
         <Badge type={humanUatBadgeType(humanUat.status)}>{humanUat.statusLabel}</Badge>
       </div>
@@ -355,6 +409,7 @@ export default function SystemControlPage() {
         Issue log: <code className="rounded bg-black/5 px-1">docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md</code>.
         Human sign-off: <code className="rounded bg-black/5 px-1">docs/13_HUMAN_UAT_SIGNOFF.md</code>.
         Decision register: <code className="rounded bg-black/5 px-1">docs/14_GOLIVE_DECISION_REGISTER.md</code>.
+        Readiness checklist: <code className="rounded bg-black/5 px-1">docs/15_GOLIVE_READINESS_CHECKLIST.md</code>.
       </Alert>
     </section>
   );
