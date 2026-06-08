@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SupabaseEnvWarning from '../../../components/system/SupabaseEnvWarning.jsx';
 import { DocumentFilterBar } from '../../../components/wms/operations/DocumentFilterBar.jsx';
 import { DocumentToolbar } from '../../../components/wms/operations/DocumentToolbar.jsx';
 import { DataTable } from '../../../components/wms/ui/DataTable.jsx';
@@ -32,8 +33,9 @@ export default function AvailableStockPage() {
 
   return (
     <section className="page-shell">
+      <SupabaseEnvWarning />
       <PageHeader title="Available Stock" description="Withdrawal allocation list — reserved vs available stock visibility (read-only)." />
-      <p className="sprint-status">Read-only: no allocation posting or stock write-back.</p>
+      <p className="sprint-status">READ ONLY — no allocation posting or stock write-back.</p>
       <DocumentToolbar title="Allocation Documents" onRefresh={loadAllocations} />
       <DocumentFilterBar onChange={() => {}} />
       <DataTable columns={columns} data={state.data} loading={state.loading} error={state.error} emptyMessage="No allocations found." />

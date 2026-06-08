@@ -1,11 +1,10 @@
 /**
- * Live read-only UAT status — static snapshot from Phase 3C initial validation pass.
- * Updated when docs/11 execution record is finalized.
+ * Live read-only UAT status — Phase 3C automated pass + Phase 3D human sign-off prep.
  */
 export const UAT_SCOPE_PAGES = 16;
 
 export const UAT_STATUS = {
-  lastUpdated: '2026-06-08T07:54:16.912Z',
+  lastUpdated: '2026-06-08T12:00:00.000Z',
   tester: 'Cursor Agent (Phase 3C)',
   environmentStatus: 'configured',
   supabaseHealthStatus: 'ok',
@@ -19,7 +18,32 @@ export const UAT_STATUS = {
     execution: 'docs/11_LIVE_READONLY_UAT_EXECUTION.md',
     issueLog: 'docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md',
     plan: 'docs/10_LIVE_READONLY_VALIDATION_PLAN.md',
+    humanSignoff: 'docs/13_HUMAN_UAT_SIGNOFF.md',
   },
+};
+
+export const HUMAN_UAT_STATUS = {
+  status: 'pending',
+  statusLabel: 'Pending',
+  lastUpdated: '2026-06-08T12:00:00.000Z',
+  signoffDocument: 'docs/13_HUMAN_UAT_SIGNOFF.md',
+  openNonBlockingIssues: [
+    {
+      id: 'UAT-004',
+      page: 'Reservation Workbench',
+      summary: 'Create reservation enabled; release disabled — governance decision required',
+    },
+  ],
+  acceptedLimitations: [
+    {
+      id: 'UAT-003',
+      pages: 'WMS Dashboard, CONSI Dashboard',
+      summary: 'Preview-only static data — live Supabase feeds deferred to Phase 4+',
+    },
+  ],
+  closedIssues: ['UAT-001', 'UAT-002'],
+  safeModeActive: true,
+  expressWriteBackDisabled: true,
 };
 
 export const UAT_PAGE_RESULTS = [
@@ -47,4 +71,8 @@ export function getUatStatusSummary() {
 
 export function getUatPageResults() {
   return [...UAT_PAGE_RESULTS];
+}
+
+export function getHumanUatStatus() {
+  return { ...HUMAN_UAT_STATUS };
 }

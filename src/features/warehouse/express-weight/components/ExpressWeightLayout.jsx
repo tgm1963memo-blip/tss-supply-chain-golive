@@ -23,7 +23,7 @@ export function ExpressWeightPageLayout({ title, description, children, actions 
           actions || (
             <>
               <Badge type="warning">DESIGN ONLY</Badge>
-              <Badge type="neutral">Safe Mode</Badge>
+              <Badge type="neutral">SAFE MODE</Badge>
             </>
           )
         }

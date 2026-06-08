@@ -34,8 +34,8 @@ export default function ProductionPurchaseSuggestionPage() {
         description="Suggestion-only planning from forecast, stock, and shortage. No PO or production order creation."
         actions={
           <>
-            <Badge type="warning">Suggestion Only</Badge>
-            <Badge type="neutral">Read-only</Badge>
+            <Badge type="warning">SUGGESTION ONLY</Badge>
+            <Badge type="neutral">READ ONLY</Badge>
           </>
         }
       />

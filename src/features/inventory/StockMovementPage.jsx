@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import SupabaseEnvWarning from '../../components/system/SupabaseEnvWarning.jsx';
 import { listStockMovements } from '../../services/warehouse/stockMovementService.js';
 
 export default function StockMovementPage() {
@@ -41,6 +42,7 @@ export default function StockMovementPage() {
 
   return (
     <div className="space-y-6">
+      <SupabaseEnvWarning />
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Stock Movement</h1>

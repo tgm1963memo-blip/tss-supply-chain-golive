@@ -1,8 +1,8 @@
 # Live Read-only UAT Issue Log
 
-Phase **3C** — issues and observations from initial UAT pass (2026-06-08).
+Phase **3C** initial pass · Phase **3D** closure and human sign-off prep.
 
-**Summary:** No Critical or High blockers. Four Low/Medium observations logged for follow-up; all pages marked **PASS** for golive read-only scope.
+**Summary:** No Critical or High blockers. UAT-001 and UAT-002 closed in Phase 3D. UAT-003 accepted as design limitation. UAT-004 pending human governance sign-off (`docs/13_HUMAN_UAT_SIGNOFF.md`).
 
 ---
 
@@ -10,10 +10,24 @@ Phase **3C** — issues and observations from initial UAT pass (2026-06-08).
 
 | Issue ID | Page | Severity | Description | Expected Result | Actual Result | Root Cause | Fix | Status | Retest Result |
 |----------|------|----------|-------------|-----------------|---------------|------------|-----|--------|---------------|
-| UAT-001 | Available Stock | Low | Missing shared env warning banner | `SupabaseEnvWarning` when env missing | Error shown in DataTable only; page does not crash | Page predates Phase 3B `SupabaseEnvWarning` component | Add `SupabaseEnvWarning` to `AvailableStockPage.jsx` | Open — enhancement | PASS (functional) |
-| UAT-002 | Stock Movement | Low | Missing shared env warning banner | Clear warning when env missing | Empty table, no banner | Page predates Phase 3B warning component | Add `SupabaseEnvWarning` to `StockMovementPage.jsx` | Open — enhancement | PASS (functional) |
-| UAT-003 | WMS Dashboard, CONSI Dashboard | Low | Preview-only data, not live Supabase | Stakeholders may expect live WMS/CONSI feeds | `OperationsPreviewPage` static module data | Phase 2 migration scope — preview until backend wired | Document in matrix; wire live views in Phase 4+ | Accepted | PASS |
-| UAT-004 | Reservation Workbench | Medium | Partial safe mode | Full read-only (no reservation create) | Create reservation enabled; release disabled | Intentional golive partial safe mode per Phase 2 reservation migration | Governance sign-off before enabling release; optional disable create in stricter mode | Accepted — governance | PASS |
+| UAT-004 | Reservation Workbench | Medium | Partial safe mode | Full read-only (no reservation create) | Create reservation enabled; release disabled | Intentional golive partial safe mode per Phase 2 reservation migration | Governance decision in `docs/13_HUMAN_UAT_SIGNOFF.md` — **no code change in Phase 3D** | Open — governance | Pending human sign-off |
+
+---
+
+## Closed issues
+
+| Issue ID | Page | Severity | Description | Fix | Status | Retest Result |
+|----------|------|----------|-------------|-----|--------|---------------|
+| UAT-001 | Available Stock | Low | Missing shared env warning banner | Added `SupabaseEnvWarning` to `AvailableStockPage.jsx` (Phase 3D) | **Closed** | PASS |
+| UAT-002 | Stock Movement | Low | Missing shared env warning banner | Added `SupabaseEnvWarning` to `StockMovementPage.jsx` (Phase 3D) | **Closed** | PASS |
+
+---
+
+## Accepted limitations
+
+| Issue ID | Page | Severity | Description | Expected Result | Actual Result | Root Cause | Status | Retest Result |
+|----------|------|----------|-------------|-----------------|---------------|------------|--------|---------------|
+| UAT-003 | WMS Dashboard, CONSI Dashboard | Low | Preview-only data, not live Supabase | Stakeholders may expect live WMS/CONSI feeds | `OperationsPreviewPage` static module data | Phase 2 migration scope — preview until backend wired in Phase 4+ | **Accepted / Design Limitation** | **Accepted** |
 
 ---
 
@@ -55,3 +69,4 @@ Log the exact `table/view`, PostgREST error code, and message in a new row above
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-06-08 | Cursor Agent (Phase 3C) | Initial log — 4 observations, 0 blockers |
+| 2026-06-08 | Cursor Agent (Phase 3D) | Closed UAT-001, UAT-002; UAT-003 → Accepted / Design Limitation; UAT-004 → governance pending |

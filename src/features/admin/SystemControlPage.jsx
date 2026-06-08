@@ -4,7 +4,7 @@ import Badge from '../../components/scm-ui/Badge.jsx';
 import PageHeader from '../../components/scm-ui/PageHeader.jsx';
 import TablePanel from '../../components/scm-ui/TablePanel.jsx';
 import { checkSupabaseHealth } from '../../services/system/supabaseHealthService.js';
-import { getUatPageResults, getUatStatusSummary } from '../../services/system/uatStatusService.js';
+import { getHumanUatStatus, getUatPageResults, getUatStatusSummary } from '../../services/system/uatStatusService.js';
 
 function yesNo(value) {
   return value ? 'Yes' : 'No';
@@ -23,8 +23,15 @@ function formatStatusLabel(status) {
   return status.replace(/_/g, ' ');
 }
 
+function humanUatBadgeType(status) {
+  if (status === 'signed_off') return 'success';
+  if (status === 'in_progress') return 'info';
+  return 'warning';
+}
+
 export default function SystemControlPage() {
   const uatStatus = getUatStatusSummary();
+  const humanUat = getHumanUatStatus();
   const uatPages = getUatPageResults();
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -55,8 +62,8 @@ export default function SystemControlPage() {
         description="Production readiness checks for Supabase environment and read-only live validation."
         actions={
           <>
-            <Badge type="neutral">Read-only</Badge>
-            <Badge type="warning">Safe Mode</Badge>
+            <Badge type="neutral">READ ONLY</Badge>
+            <Badge type="warning">SAFE MODE</Badge>
           </>
         }
       />
@@ -188,6 +195,72 @@ export default function SystemControlPage() {
         </table>
       </TablePanel>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Human UAT Sign-off</h3>
+        <Badge type={humanUatBadgeType(humanUat.status)}>{humanUat.statusLabel}</Badge>
+      </div>
+
+      <TablePanel>
+        <table className="tgm-table">
+          <tbody>
+            <tr>
+              <th className="w-[220px] text-left">Human UAT status</th>
+              <td>
+                <Badge type={humanUatBadgeType(humanUat.status)}>{humanUat.statusLabel}</Badge>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Sign-off document</th>
+              <td className="font-mono text-xs">{humanUat.signoffDocument}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Open non-blocking issues</th>
+              <td>
+                {humanUat.openNonBlockingIssues.length === 0 ? (
+                  'None'
+                ) : (
+                  <ul className="list-disc space-y-1 pl-4 text-sm text-[var(--color-text-muted)]">
+                    {humanUat.openNonBlockingIssues.map((issue) => (
+                      <li key={issue.id}>
+                        <strong>{issue.id}</strong> — {issue.page}: {issue.summary}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Accepted limitations</th>
+              <td>
+                <ul className="list-disc space-y-1 pl-4 text-sm text-[var(--color-text-muted)]">
+                  {humanUat.acceptedLimitations.map((item) => (
+                    <li key={item.id}>
+                      <strong>{item.id}</strong> — {item.pages}: {item.summary}
+                    </li>
+                  ))}
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Closed issues (Phase 3D)</th>
+              <td>{humanUat.closedIssues.join(', ')}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Safe-mode active</th>
+              <td>{yesNo(humanUat.safeModeActive)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Express write-back disabled</th>
+              <td>{yesNo(humanUat.expressWriteBackDisabled)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Last update</th>
+              <td>{new Date(humanUat.lastUpdated).toLocaleString()}</td>
+            </tr>
+          </tbody>
+        </table>
+      </TablePanel>
+
       <TablePanel title="UAT page results">
         <table className="tgm-table">
           <thead>
@@ -226,6 +299,7 @@ export default function SystemControlPage() {
         Live UAT checklist: <code className="rounded bg-black/5 px-1">docs/10_LIVE_READONLY_VALIDATION_PLAN.md</code>.
         UAT execution: <code className="rounded bg-black/5 px-1">docs/11_LIVE_READONLY_UAT_EXECUTION.md</code>.
         Issue log: <code className="rounded bg-black/5 px-1">docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md</code>.
+        Human sign-off: <code className="rounded bg-black/5 px-1">docs/13_HUMAN_UAT_SIGNOFF.md</code>.
       </Alert>
     </section>
   );
