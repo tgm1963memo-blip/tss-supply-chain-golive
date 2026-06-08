@@ -409,7 +409,10 @@ export default function SystemControlPage() {
         Issue log: <code className="rounded bg-black/5 px-1">docs/12_LIVE_READONLY_UAT_ISSUE_LOG.md</code>.
         Human sign-off: <code className="rounded bg-black/5 px-1">docs/13_HUMAN_UAT_SIGNOFF.md</code>.
         Decision register: <code className="rounded bg-black/5 px-1">docs/14_GOLIVE_DECISION_REGISTER.md</code>.
-        Readiness checklist: <code className="rounded bg-black/5 px-1">docs/15_GOLIVE_READINESS_CHECKLIST.md</code>.
+        Readiness checklist: <code className="rounded bg-black/5 px-1">docs/15_GOLIVE_READINESS_CHECKLIST.md</code>.<br/>
+        Thai UAT Script: <code className="rounded bg-black/5 px-1">docs/17_THAI_UAT_TEST_SCRIPT.md</code>.
+        Thai UAT Issue Log: <code className="rounded bg-black/5 px-1">docs/18_THAI_UAT_ISSUE_LOG.md</code>.
+        Thai UAT Sign-off: <code className="rounded bg-black/5 px-1">docs/19_THAI_UAT_SIGNOFF_FORM.md</code>.
       </Alert>
     </section>
   );
