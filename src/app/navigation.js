@@ -5,6 +5,7 @@ import {
   Warehouse,
   Store,
   Database,
+  Settings,
 } from 'lucide-react';
 
 /**
@@ -103,6 +104,13 @@ export const navigationGroups = [
       { label: 'Sell-out Record', path: '/consignment/sell-out' },
       { label: 'Return from Branch', path: '/consignment/return-from-branch' },
       { label: 'CONSI Return / CN', path: '/consignment/return-cn' },
+    ],
+  },
+  {
+    label: 'Admin / Control',
+    icon: Settings,
+    items: [
+      { label: 'System Control', path: '/admin/system-control' },
     ],
   },
   {

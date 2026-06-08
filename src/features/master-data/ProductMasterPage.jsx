@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ProductForm from '../../components/master-data/ProductForm.jsx';
 import ProductTable from '../../components/master-data/ProductTable.jsx';
+import SupabaseEnvWarning from '../../components/system/SupabaseEnvWarning.jsx';
 import { getProducts } from '../../services/master-data/productService.js';
 
 export default function ProductMasterPage() {
@@ -51,6 +52,7 @@ export default function ProductMasterPage() {
 
   return (
     <section className="space-y-5">
+      <SupabaseEnvWarning />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-950">Product Master</h2>

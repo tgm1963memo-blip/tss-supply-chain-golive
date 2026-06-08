@@ -73,6 +73,7 @@ import CustomerBranchPage from '../features/master-data/CustomerBranchPage.jsx';
 import WarehouseMasterPage from '../features/master-data/WarehouseMasterPage.jsx';
 import LocationMasterPage from '../features/master-data/LocationMasterPage.jsx';
 import RoomCompanyPage from '../features/master-data/RoomCompanyPage.jsx';
+import SystemControlPage from '../features/admin/SystemControlPage.jsx';
 
 // Legacy mockup fallbacks (hidden from menu, reachable via redirect)
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
@@ -204,7 +205,8 @@ export default function AppRoutes() {
           <Route path="*" element={<Navigate to="/executive/management" replace />} />
         </Route>
         <Route path="admin">
-          <Route path="*" element={<Navigate to="/executive/management" replace />} />
+          <Route path="system-control" element={<SystemControlPage />} />
+          <Route path="*" element={<Navigate to="/admin/system-control" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/executive/management" replace />} />

@@ -56,7 +56,9 @@ function mapProductRow(row) {
 }
 
 export async function getProducts({ search = '', limit = DEFAULT_LIMIT } = {}) {
-  ensureSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
 
   const normalizedSearch = normalizeSearch(search);
 

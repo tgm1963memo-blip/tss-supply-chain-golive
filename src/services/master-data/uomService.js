@@ -47,7 +47,9 @@ function mapConversionRow(row) {
 }
 
 export async function getUomConversions({ search = '' } = {}) {
-  ensureSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
 
   let query = supabase
     .from('sc_product_uom_conversion')

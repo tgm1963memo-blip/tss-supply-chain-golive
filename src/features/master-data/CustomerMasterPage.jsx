@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import SupabaseEnvWarning from '../../components/system/SupabaseEnvWarning.jsx';
 import { getCustomers } from '../../services/master-data/customerService.js';
 
 function StatusBadge({ status }) {
@@ -64,6 +65,7 @@ export default function CustomerMasterPage() {
 
   return (
     <section className="space-y-5">
+      <SupabaseEnvWarning />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-950">Customer Master</h2>

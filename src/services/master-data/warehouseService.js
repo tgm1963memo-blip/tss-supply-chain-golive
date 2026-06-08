@@ -28,7 +28,9 @@ function mapWarehouseRow(row) {
 }
 
 export async function getWarehouses({ search = '', limit = DEFAULT_LIMIT } = {}) {
-  ensureSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
 
   const normalizedSearch = normalizeSearch(search);
 

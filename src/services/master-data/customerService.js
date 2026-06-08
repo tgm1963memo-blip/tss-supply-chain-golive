@@ -31,7 +31,9 @@ function mapCustomerRow(row) {
 }
 
 export async function getCustomers({ search = '', limit = DEFAULT_LIMIT } = {}) {
-  ensureSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
 
   const normalizedSearch = normalizeSearch(search);
 

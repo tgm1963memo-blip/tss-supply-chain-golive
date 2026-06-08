@@ -76,7 +76,9 @@ function applyAvailabilityFilters(query, filters = {}) {
 }
 
 export async function listInventoryAvailability(filters = {}) {
-  ensureSupabaseClient();
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
 
   const limit = filters.limit || DEFAULT_LIMIT;
 
@@ -122,7 +124,9 @@ export async function getInventoryAvailabilityByProduct(productCode, filters = {
 }
 
 export async function listInventoryBalances(filters = {}) {
-  ensureSupabaseClient();
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
 
   const limit = filters.limit || DEFAULT_LIMIT;
 
