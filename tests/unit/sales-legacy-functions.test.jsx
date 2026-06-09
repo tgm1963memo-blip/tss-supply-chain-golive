@@ -137,7 +137,8 @@ describe('Sales legacy functions — Customer Registration', () => {
     expect(screen.getByLabelText(/Tax ID/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Branch Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Billing Cycle/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Business registration document/i)).toBeInTheDocument();
+    expect(screen.getByText(/สำเนาบัตรประชาชน/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Drive link/i)).toBeInTheDocument();
   });
 
   it('shows approval timeline columns and workflow buttons for submitted status', async () => {
@@ -182,6 +183,27 @@ describe('Sales legacy functions — Customer Registration', () => {
     expect(screen.queryByRole('button', { name: 'Submit for Approval' })).not.toBeInTheDocument();
   });
 
+  it('shows CR_DOC_SLOTS attachment section with metadata-only mode', async () => {
+    await openNewRegistrationForm();
+    expect(screen.getByText(/CR_DOC_SLOTS/i)).toBeInTheDocument();
+    expect(screen.getByText(/สำเนาบัตรประชาชน/)).toBeInTheDocument();
+    expect(screen.getAllByText(/metadata only/i).length).toBeGreaterThan(0);
+  });
+
+  it('shows existing customer search for edit request type', async () => {
+    await openNewRegistrationForm();
+    fireEvent.change(screen.getByLabelText(/Request Type/i), { target: { value: 'edit_customer' } });
+    expect(await screen.findByText(/Existing Customer Search/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
+  });
+
+  it('includes credit_change and final note fields', async () => {
+    await openNewRegistrationForm();
+    fireEvent.change(screen.getByLabelText(/Request Type/i), { target: { value: 'credit_change' } });
+    expect(await screen.findByLabelText(/Credit change requested/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Final note/i)).toBeInTheDocument();
+  });
+
   it('shows DATA ENTRY safe mode and no Express ARMAS write actions', async () => {
     render(<CustomerRegistrationPage />);
     expect(await screen.findByText('DATA ENTRY')).toBeInTheDocument();
@@ -196,6 +218,8 @@ describe('Sales legacy services safety', () => {
     expect(customerRegistrationSource).toMatch(/from_status/);
     expect(customerRegistrationSource).toMatch(/to_status/);
     expect(customerRegistrationSource).toMatch(/actor_name/);
+    expect(customerRegistrationSource).toMatch(/CR_DOC_SLOTS/);
+    expect(customerRegistrationSource).toMatch(/searchExistingCustomers/);
     expect(customerRegistrationSource).not.toMatch(/service_role/i);
     expect(customerRegistrationSource).not.toMatch(/ARMAS/i);
   });

@@ -1,4 +1,7 @@
 import { supabase } from '../../lib/supabaseClient.js';
+import { CR_DOC_SLOTS, normalizeDocumentSlots } from '../../constants/customerRegistrationLegacy.js';
+
+export { CR_DOC_SLOTS };
 
 function ensureSupabase() {
   if (!supabase) throw new Error('Supabase client is not configured.');
@@ -14,6 +17,8 @@ const REQUEST_FIELDS = [
   'payment_method', 'price_tier', 'gp_discount_condition', 'billing_cycle', 'collection_method',
   'remark', 'attachments_notes', 'doc_business_registration', 'doc_tax_certificate',
   'doc_storefront_photo', 'doc_map_location', 'doc_other', 'internal_note', 'drive_link',
+  'existing_customer_code', 'original_customer_snapshot', 'proposed_changes', 'document_slots',
+  'credit_change_requested', 'suspend_reason', 'final_note',
 ];
 
 const APPROVAL_LOG_SELECT = [
@@ -45,7 +50,102 @@ function normalizeNumericFields(payload) {
   } else {
     next.credit_limit_requested = Number(next.credit_limit_requested);
   }
+  if (next.document_slots !== undefined) {
+    next.document_slots = normalizeDocumentSlots(next.document_slots);
+  }
+  if (next.original_customer_snapshot && typeof next.original_customer_snapshot === 'string') {
+    try {
+      next.original_customer_snapshot = JSON.parse(next.original_customer_snapshot);
+    } catch {
+      next.original_customer_snapshot = {};
+    }
+  }
+  if (next.proposed_changes && typeof next.proposed_changes === 'string') {
+    try {
+      next.proposed_changes = JSON.parse(next.proposed_changes);
+    } catch {
+      next.proposed_changes = {};
+    }
+  }
   return next;
+}
+
+function mapCustomerRow(row) {
+  if (!row) return null;
+  return {
+    customer_code: row.customer_code || '',
+    customer_name: row.customer_name || '',
+    customer_group: row.customer_group || '',
+    sales_code: row.sales_code || '',
+    room_code: row.room_code || '',
+    source: row.source_file ? 'sc_web_customer_master_view' : 'sc_express_customers',
+  };
+}
+
+export async function searchExistingCustomers(query, limit = 20) {
+  ensureSupabase();
+  const q = (query || '').trim();
+  if (!q) return [];
+
+  const pattern = `%${q}%`;
+  const { data: viewRows, error: viewError } = await supabase
+    .from('sc_web_customer_master_view')
+    .select('customer_code, customer_name, customer_group, sales_code, room_code, source_file')
+    .or(`customer_code.ilike.${pattern},customer_name.ilike.${pattern}`)
+    .limit(limit);
+
+  if (!viewError && viewRows?.length) {
+    return viewRows.map(mapCustomerRow);
+  }
+
+  const { data: fallbackRows, error: fallbackError } = await supabase
+    .from('sc_express_customers')
+    .select('customer_code, customer_name, customer_group, sales_code, room_code, source_file')
+    .or(`customer_code.ilike.${pattern},customer_name.ilike.${pattern}`)
+    .limit(limit);
+
+  if (fallbackError) throw fallbackError;
+  return (fallbackRows || []).map(mapCustomerRow);
+}
+
+export async function loadExistingCustomerSnapshot(customerCode) {
+  ensureSupabase();
+  const code = (customerCode || '').trim();
+  if (!code) return null;
+
+  const { data: viewRow } = await supabase
+    .from('sc_web_customer_master_view')
+    .select('*')
+    .eq('customer_code', code)
+    .maybeSingle();
+
+  if (viewRow) {
+    return { ...mapCustomerRow(viewRow), raw: viewRow, loaded_at: new Date().toISOString() };
+  }
+
+  const { data: fallbackRow, error } = await supabase
+    .from('sc_express_customers')
+    .select('*')
+    .eq('customer_code', code)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!fallbackRow) return null;
+  return { ...mapCustomerRow(fallbackRow), raw: fallbackRow, loaded_at: new Date().toISOString() };
+}
+
+export function isStorageConfigured() {
+  return Boolean(import.meta.env.VITE_SUPABASE_STORAGE_BUCKET);
+}
+
+export function buildDocumentSlotMetadata(fileList, slotId) {
+  return Array.from(fileList || []).slice(0, CR_DOC_SLOTS.find((s) => s.id === slotId)?.maxFiles || 10).map((file) => ({
+    name: file.name,
+    size: file.size,
+    type: file.type || '',
+    mode: 'metadata_only',
+    uploaded_at: new Date().toISOString(),
+  }));
 }
 
 export function normalizeApprovalLog(log) {
@@ -85,7 +185,11 @@ export async function getCustomerRegistrationRequest(id) {
     .order('created_at', { ascending: true });
   if (branchError) throw branchError;
 
-  return { ...request, branches: branches || [] };
+  return {
+    ...request,
+    document_slots: normalizeDocumentSlots(request?.document_slots),
+    branches: branches || [],
+  };
 }
 
 export async function createCustomerRegistrationDraft(payload) {

@@ -6,23 +6,28 @@ import StatusBadge from '../../components/scm-ui/StatusBadge.jsx';
 import TablePanel from '../../components/scm-ui/TablePanel.jsx';
 import {
   approveCustomerRegistration,
+  buildDocumentSlotMetadata,
   createCustomerRegistrationDraft,
   getCustomerRegistrationRequest,
+  isStorageConfigured,
   listCustomerRegistrationApprovalLogs,
   listCustomerRegistrationRequests,
+  loadExistingCustomerSnapshot,
   rejectCustomerRegistration,
   requestCustomerRegistrationRevision,
+  searchExistingCustomers,
   submitCustomerRegistration,
   updateCustomerRegistrationDraft,
 } from '../../services/sales/customerRegistrationService.js';
+import {
+  CR_DOC_SLOTS,
+  CUSTREG_REQUEST_TYPES,
+  emptyDocumentSlots,
+} from '../../constants/customerRegistrationLegacy.js';
 import './customer-registration.css';
 
-const REQUEST_TYPES = [
-  { value: 'new_customer', label: 'New Customer / ร้านค้าใหม่' },
-  { value: 'edit_customer', label: 'Edit Customer / เปลี่ยนแปลงข้อมูลลูกค้าเก่า' },
-  { value: 'add_branch', label: 'Add Branch / เพิ่มสาขา' },
-  { value: 'suspend', label: 'Suspend / ระงับ' },
-];
+const REQUEST_TYPES = CUSTREG_REQUEST_TYPES;
+const EXISTING_CUSTOMER_TYPES = ['edit_customer', 'add_branch', 'credit_change', 'suspend'];
 
 const EMPTY_FORM = {
   request_no: '',
@@ -72,10 +77,24 @@ const EMPTY_FORM = {
   internal_note: '',
   drive_link: '',
   attachments_notes: '',
+  existing_customer_code: '',
+  original_customer_snapshot: null,
+  proposed_changes: {},
+  document_slots: emptyDocumentSlots(),
+  credit_change_requested: '',
+  suspend_reason: '',
+  final_note: '',
 };
 
 function normalizeForm(data) {
-  return { ...EMPTY_FORM, ...data, credit_limit_requested: data?.credit_limit_requested ?? '' };
+  return {
+    ...EMPTY_FORM,
+    ...data,
+    credit_limit_requested: data?.credit_limit_requested ?? '',
+    document_slots: data?.document_slots?.length ? data.document_slots : emptyDocumentSlots(),
+    original_customer_snapshot: data?.original_customer_snapshot || null,
+    proposed_changes: data?.proposed_changes || {},
+  };
 }
 
 function Field({ label, children, span = 1 }) {
@@ -124,6 +143,15 @@ export default function CustomerRegistrationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerResults, setCustomerResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [storageNote] = useState(() => !isStorageConfigured());
+
+  const needsExistingCustomer = useMemo(
+    () => EXISTING_CUSTOMER_TYPES.includes(form.request_type),
+    [form.request_type],
+  );
 
   const readOnly = useMemo(
     () => ['approved', 'rejected', 'cancelled'].includes(form.status),
@@ -179,6 +207,69 @@ export default function CustomerRegistrationPage() {
 
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateProposedChange(field, value) {
+    setForm((prev) => ({
+      ...prev,
+      proposed_changes: { ...(prev.proposed_changes || {}), [field]: value },
+    }));
+  }
+
+  function updateDocumentSlot(slotId, patch) {
+    setForm((prev) => ({
+      ...prev,
+      document_slots: (prev.document_slots || emptyDocumentSlots()).map((slot) =>
+        slot.id === slotId ? { ...slot, ...patch } : slot,
+      ),
+    }));
+  }
+
+  function handleSlotFiles(slotId, fileList) {
+    const files = buildDocumentSlotMetadata(fileList, slotId);
+    updateDocumentSlot(slotId, { files });
+  }
+
+  async function runCustomerSearch() {
+    if (!customerSearch.trim()) return;
+    setSearchLoading(true);
+    setError(null);
+    try {
+      setCustomerResults(await searchExistingCustomers(customerSearch));
+    } catch (err) {
+      setError(err);
+      setCustomerResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  async function selectExistingCustomer(code) {
+    setSearchLoading(true);
+    setError(null);
+    try {
+      const snapshot = await loadExistingCustomerSnapshot(code);
+      if (!snapshot) {
+        setMessage('');
+        setError(new Error(`Customer ${code} not found in read model.`));
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        existing_customer_code: code,
+        customer_code_requested: code,
+        customer_name_th: snapshot.customer_name || prev.customer_name_th,
+        original_customer_snapshot: snapshot,
+        proposed_changes: prev.proposed_changes || {},
+      }));
+      setCustomerResults([]);
+      setCustomerSearch(code);
+      setMessage(`Loaded read-only snapshot for ${code} (no Express write-back).`);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setSearchLoading(false);
+    }
   }
 
   async function saveDraft() {
@@ -330,6 +421,116 @@ export default function CustomerRegistrationPage() {
           </div>
         </FormCard>
 
+        {needsExistingCustomer && (
+          <FormCard titleTh="1b. ค้นหาลูกค้าเดิม" titleEn="Existing Customer Search">
+            <Alert variant="info">
+              Loads read-only data from sc_web_customer_master_view (fallback sc_express_customers). Never reads Express DBF from frontend.
+            </Alert>
+            <div className="custreg-form-grid">
+              <Field label="Search by code or name / ค้นหารหัสหรือชื่อ" span={3}>
+                <div className="flex gap-2">
+                  <TextInput
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    disabled={readOnly}
+                    placeholder="Customer code or name"
+                  />
+                  <button type="button" className="tgm-btn" onClick={runCustomerSearch} disabled={readOnly || searchLoading}>
+                    Search
+                  </button>
+                </div>
+              </Field>
+              <Field label="Selected existing code / รหัสลูกค้าเดิม">
+                <TextInput value={form.existing_customer_code || ''} disabled />
+              </Field>
+            </div>
+            {customerResults.length > 0 && (
+              <TablePanel title="Search results">
+                <table className="tgm-table">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Name</th>
+                      <th>Group</th>
+                      <th>Sales</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerResults.map((row) => (
+                      <tr key={row.customer_code}>
+                        <td className="font-mono">{row.customer_code}</td>
+                        <td>{row.customer_name}</td>
+                        <td>{row.customer_group || '—'}</td>
+                        <td>{row.sales_code || '—'}</td>
+                        <td>
+                          <button type="button" className="tgm-btn tgm-btn-sm" onClick={() => selectExistingCustomer(row.customer_code)} disabled={readOnly}>
+                            Load snapshot
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablePanel>
+            )}
+          </FormCard>
+        )}
+
+        {form.original_customer_snapshot && (
+          <FormCard titleTh="1c. ข้อมูลลูกค้าเดิม (อ่านอย่างเดียว)" titleEn="Original Customer Snapshot">
+            <div className="custreg-form-grid">
+              <Field label="Customer Code"><TextInput value={form.original_customer_snapshot.customer_code || ''} disabled /></Field>
+              <Field label="Customer Name"><TextInput value={form.original_customer_snapshot.customer_name || ''} disabled /></Field>
+              <Field label="Customer Group"><TextInput value={form.original_customer_snapshot.customer_group || ''} disabled /></Field>
+              <Field label="Sales Code"><TextInput value={form.original_customer_snapshot.sales_code || ''} disabled /></Field>
+              <Field label="Snapshot loaded at" span={2}>
+                <TextInput value={form.original_customer_snapshot.loaded_at || '—'} disabled />
+              </Field>
+            </div>
+          </FormCard>
+        )}
+
+        {needsExistingCustomer && (
+          <FormCard titleTh="1d. การเปลี่ยนแปลงที่เสนอ" titleEn="Proposed Changes">
+            <div className="custreg-form-grid">
+              <Field label="Proposed name / ชื่อที่เสนอ" span={2}>
+                <TextInput
+                  value={form.proposed_changes?.customer_name || ''}
+                  onChange={(e) => updateProposedChange('customer_name', e.target.value)}
+                  disabled={readOnly}
+                />
+              </Field>
+              <Field label="Proposed address / ที่อยู่ที่เสนอ" span={4}>
+                <TextArea
+                  value={form.proposed_changes?.billing_address || ''}
+                  onChange={(e) => updateProposedChange('billing_address', e.target.value)}
+                  disabled={readOnly}
+                />
+              </Field>
+              {form.request_type === 'credit_change' && (
+                <Field label="Credit change requested / เปลี่ยนเครดิต" span={2}>
+                  <TextArea
+                    value={form.credit_change_requested || ''}
+                    onChange={(e) => updateField('credit_change_requested', e.target.value)}
+                    disabled={readOnly}
+                    placeholder="Describe credit term/limit change"
+                  />
+                </Field>
+              )}
+              {form.request_type === 'suspend' && (
+                <Field label="Suspend reason / เหตุผลระงับ" span={2}>
+                  <TextArea
+                    value={form.suspend_reason || ''}
+                    onChange={(e) => updateField('suspend_reason', e.target.value)}
+                    disabled={readOnly}
+                  />
+                </Field>
+              )}
+            </div>
+          </FormCard>
+        )}
+
         <FormCard titleTh="2. ข้อมูลลูกค้า" titleEn="Customer Information">
           <div className="custreg-form-grid">
             <Field label="Customer Code requested / รหัสลูกค้า"><TextInput value={form.customer_code_requested} onChange={(e) => updateField('customer_code_requested', e.target.value)} disabled={readOnly} /></Field>
@@ -383,17 +584,67 @@ export default function CustomerRegistrationPage() {
           </div>
         </FormCard>
 
-        <FormCard titleTh="6. เอกสารแนบ" titleEn="Attachments & Notes">
-          <div className="custreg-doc-grid">
-            <Field label="Business registration document / ทะเบียนร้าน"><TextInput value={form.doc_business_registration} onChange={(e) => updateField('doc_business_registration', e.target.value)} disabled={readOnly} placeholder="Link or filename" /></Field>
-            <Field label="Tax certificate / ภ.พ.20"><TextInput value={form.doc_tax_certificate} onChange={(e) => updateField('doc_tax_certificate', e.target.value)} disabled={readOnly} /></Field>
-            <Field label="Storefront photo / รูปหน้าร้าน"><TextInput value={form.doc_storefront_photo} onChange={(e) => updateField('doc_storefront_photo', e.target.value)} disabled={readOnly} /></Field>
-            <Field label="Map / location file / แผนที่"><TextInput value={form.doc_map_location} onChange={(e) => updateField('doc_map_location', e.target.value)} disabled={readOnly} /></Field>
-            <Field label="Other document / เอกสารอื่น"><TextInput value={form.doc_other} onChange={(e) => updateField('doc_other', e.target.value)} disabled={readOnly} /></Field>
-            <Field label="Drive link / โฟลเดอร์เอกสาร"><TextInput value={form.drive_link} onChange={(e) => updateField('drive_link', e.target.value)} disabled={readOnly} placeholder="Google Drive URL" /></Field>
+        <FormCard titleTh="6. เอกสารแนบ (CR_DOC_SLOTS)" titleEn="Attachments & Notes">
+          {storageNote && (
+            <Alert variant="warning">
+              Supabase Storage bucket is not configured for this environment. Attachments are stored as metadata only (filename, size, type) — no binary upload. Use Drive link for full documents.
+            </Alert>
+          )}
+          <div className="custreg-doc-slots space-y-3">
+            {CR_DOC_SLOTS.map((slotDef) => {
+              const slot = (form.document_slots || []).find((s) => s.id === slotDef.id) || { id: slotDef.id, files: [], note: '' };
+              return (
+                <div key={slotDef.id} className="custreg-slot border border-[var(--color-border)] rounded-lg p-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <strong>{slotDef.label}</strong>
+                    {slotDef.req ? <Badge type="warning">Required</Badge> : null}
+                    <span className="text-sm text-[var(--color-text-muted)]">{slotDef.hint}</span>
+                  </div>
+                  <div className="custreg-form-grid">
+                    <Field label={`Upload (metadata only, max ${slotDef.maxFiles})`} span={2}>
+                      <input
+                        type="file"
+                        multiple={slotDef.maxFiles > 1}
+                        disabled={readOnly}
+                        onChange={(e) => handleSlotFiles(slotDef.id, e.target.files)}
+                      />
+                    </Field>
+                    <Field label="Slot note / หมายเหตุ">
+                      <TextInput
+                        value={slot.note || ''}
+                        onChange={(e) => updateDocumentSlot(slotDef.id, { note: e.target.value })}
+                        disabled={readOnly}
+                      />
+                    </Field>
+                  </div>
+                  {(slot.files || []).length > 0 && (
+                    <ul className="text-sm mt-2 space-y-1">
+                      {slot.files.map((f, idx) => (
+                        <li key={`${slotDef.id}-${idx}`}>
+                          {f.name} ({f.size} bytes) — metadata only
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="custreg-doc-grid mt-3">
+            <Field label="Drive link / โฟลเดอร์เอกสาร" span={2}>
+              <TextInput value={form.drive_link} onChange={(e) => updateField('drive_link', e.target.value)} disabled={readOnly} placeholder="Google Drive URL" />
+            </Field>
+            <Field label="Legacy doc fields (optional text refs)" span={2}>
+              <TextInput value={form.doc_other} onChange={(e) => updateField('doc_other', e.target.value)} disabled={readOnly} placeholder="Other document reference" />
+            </Field>
           </div>
           <div className="custreg-form-grid mt-3">
-            <Field label="Internal note / หมายเหตุภายใน" span={4}><TextArea value={form.internal_note} onChange={(e) => updateField('internal_note', e.target.value)} disabled={readOnly} /></Field>
+            <Field label="Internal note / หมายเหตุภายใน" span={4}>
+              <TextArea value={form.internal_note} onChange={(e) => updateField('internal_note', e.target.value)} disabled={readOnly} />
+            </Field>
+            <Field label="Final note / หมายเหตุสุดท้าย (legacy cr-final-note)" span={4}>
+              <TextArea value={form.final_note} onChange={(e) => updateField('final_note', e.target.value)} disabled={readOnly} placeholder="Final note before submit" />
+            </Field>
           </div>
         </FormCard>
 
