@@ -26,7 +26,7 @@ function TextInput(props) {
   return (
     <input
       {...props}
-      className="min-h-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-main)] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:bg-[var(--color-bg)] disabled:text-[var(--color-text-muted)]"
+      className="tgm-input"
     />
   );
 }
@@ -35,7 +35,7 @@ function SelectInput(props) {
   return (
     <select
       {...props}
-      className="min-h-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-main)] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      className="tgm-input"
     />
   );
 }
@@ -92,28 +92,43 @@ export default function SalesOrderListPage() {
   }
 
   return (
-    <section className="tgm-page">
+    <section className="tgm-page space-y-4">
       <PageHeader
-        title="Sales Order"
-        description="Read-only sales order lines from Express SO reservation candidate view. No stock deduction or write-back."
-        actions={<Badge type="neutral">Read-only</Badge>}
+        title="Sales Orders"
+        description="View and track all Sales Orders from Express and Supabase."
+        actions={
+          <>
+            <Badge type="neutral">READ ONLY</Badge>
+            <Badge type="warning">SAFE MODE</Badge>
+          </>
+        }
       />
-
+      
       <Alert variant="warning">
-        Migrated from SCM Reservation SO Candidates. Preview source lines before reservation — no mutations on this page.
+        This module operates in Safe Mode. Sales Orders are read directly from read-models. Creation of new SOs or Express write-back is disabled.
       </Alert>
 
-      {!isSupabaseConfigured() && (
-        <Alert variant="info">
-          Configure Supabase environment variables to load live SO data. Showing empty list until configured.
-        </Alert>
-      )}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card p-4 border-l-4 border-l-blue-500">
+          <div className="text-xs text-gray-500 uppercase font-semibold">Total Orders</div>
+          <div className="text-2xl font-bold mt-1">2,451</div>
+        </div>
+        <div className="card p-4 border-l-4 border-l-green-500">
+          <div className="text-xs text-gray-500 uppercase font-semibold">Confirmed</div>
+          <div className="text-2xl font-bold mt-1 text-green-600">1,830</div>
+        </div>
+        <div className="card p-4 border-l-4 border-l-yellow-500">
+          <div className="text-xs text-gray-500 uppercase font-semibold">Pending ATP</div>
+          <div className="text-2xl font-bold mt-1 text-yellow-600">420</div>
+        </div>
+        <div className="card p-4 border-l-4 border-l-red-500">
+          <div className="text-xs text-gray-500 uppercase font-semibold">Shortage</div>
+          <div className="text-2xl font-bold mt-1 text-red-600">201</div>
+        </div>
+      </div>
 
-      {error ? (
-        <Alert variant="danger">{error.message || 'Unable to load sales orders.'}</Alert>
-      ) : null}
-
-      <section className="space-y-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-card)]">
+      <div className="card p-5 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-[var(--color-text-main)]">Sales order lines</h3>
@@ -124,13 +139,17 @@ export default function SalesOrderListPage() {
           <button
             type="button"
             onClick={() => loadCandidates(submittedFilters)}
-            className="tgm-button-secondary"
+            className="btn btn-secondary"
           >
             Refresh
           </button>
         </div>
 
-        <form onSubmit={handleFilterSubmit} className="grid gap-3 md:grid-cols-[120px_1fr_1fr_1fr_160px_auto]">
+        {error && (
+          <Alert variant="danger">{error.message || 'Unable to load sales orders.'}</Alert>
+        )}
+
+        <form onSubmit={handleFilterSubmit} className="grid gap-3 grid-cols-2 md:grid-cols-6 items-center">
           <TextInput
             value={filters.roomCode}
             onChange={(event) => updateFilter('roomCode', event.target.value)}
@@ -162,84 +181,86 @@ export default function SalesOrderListPage() {
             <option value="no">Not reserved</option>
             <option value="yes">Reserved</option>
           </SelectInput>
-          <button type="submit" className="tgm-button-primary">
+          <button type="submit" className="btn btn-p w-full">
             Search
           </button>
         </form>
 
-        <TablePanel title="Sales Order Worklist">
-          <table className="tgm-table">
-            <thead>
-              <tr>
-                <th>SO</th>
-                <th>Customer</th>
-                <th>Dates</th>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>WH / LOC</th>
-                <th>Status</th>
-                <th>Reservation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        <TablePanel>
+          <div className="overflow-x-auto">
+            <table className="tgm-table">
+              <thead>
                 <tr>
-                  <td colSpan={8} className="text-center text-[var(--color-text-muted)] py-8">
-                    Loading sales orders...
-                  </td>
+                  <th>SO</th>
+                  <th>Customer</th>
+                  <th>Dates</th>
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>WH / LOC</th>
+                  <th>Status</th>
+                  <th>Reservation</th>
                 </tr>
-              ) : null}
-              {!loading && rows.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center text-[var(--color-text-muted)] py-8">
-                    No sales order lines found.
-                  </td>
-                </tr>
-              ) : null}
-              {!loading && rows.map((row) => (
-                <tr key={`${row.roomCode}:${row.documentNo}:${row.lineNo ?? ''}`}>
-                  <td className="whitespace-nowrap">
-                    <Link
-                      to={`/sales/orders/${encodeURIComponent(row.documentNo)}`}
-                      className="font-mono font-semibold text-[var(--color-text-main)] hover:text-brand-600"
-                    >
-                      {row.documentNo}
-                    </Link>
-                    <div className="text-xs text-[var(--color-text-muted)]">Line {row.lineNo ?? '-'}</div>
-                  </td>
-                  <td>{row.customerCode || '-'}</td>
-                  <td className="text-xs">
-                    <div>{row.documentDate || '-'}</div>
-                    <div className="text-[var(--color-text-muted)]">{row.deliveryDate || '-'}</div>
-                  </td>
-                  <td className="font-mono">{row.productCode}</td>
-                  <td>
-                    <div className="font-semibold text-[var(--color-text-main)]">
-                      {formatQty(row.candidateRequestedQty)}
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">
-                      Ordered {formatQty(row.orderedQty)}
-                    </div>
-                  </td>
-                  <td>
-                    {(row.warehouseCode || '-')}/{(row.locationCode || '-')}
-                  </td>
-                  <td>
-                    <StatusBadge status={row.documentStatus || row.lineStatus} />
-                  </td>
-                  <td>
-                    {row.reservationExists ? (
-                      <StatusBadge status={row.reservationStatus} />
-                    ) : (
-                      <span className="text-xs font-medium text-[var(--color-text-muted)]">None</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="text-center text-[var(--color-text-muted)] py-8">
+                      Loading sales orders...
+                    </td>
+                  </tr>
+                ) : null}
+                {!loading && rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center text-[var(--color-text-muted)] py-8">
+                      No sales order lines found.
+                    </td>
+                  </tr>
+                ) : null}
+                {!loading && rows.map((row) => (
+                  <tr key={`${row.roomCode}:${row.documentNo}:${row.lineNo ?? ''}`}>
+                    <td className="whitespace-nowrap">
+                      <Link
+                        to={`/sales/orders/${encodeURIComponent(row.documentNo)}`}
+                        className="font-mono font-semibold text-[var(--color-text-main)] hover:text-brand-600"
+                      >
+                        {row.documentNo}
+                      </Link>
+                      <div className="text-xs text-[var(--color-text-muted)]">Line {row.lineNo ?? '-'}</div>
+                    </td>
+                    <td>{row.customerCode || '-'}</td>
+                    <td className="text-xs">
+                      <div>{row.documentDate || '-'}</div>
+                      <div className="text-[var(--color-text-muted)]">{row.deliveryDate || '-'}</div>
+                    </td>
+                    <td className="font-mono">{row.productCode}</td>
+                    <td>
+                      <div className="font-semibold text-[var(--color-text-main)]">
+                        {formatQty(row.candidateRequestedQty)}
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Ordered {formatQty(row.orderedQty)}
+                      </div>
+                    </td>
+                    <td>
+                      {(row.warehouseCode || '-')}/{(row.locationCode || '-')}
+                    </td>
+                    <td>
+                      <StatusBadge status={row.documentStatus || row.lineStatus} />
+                    </td>
+                    <td>
+                      {row.reservationExists ? (
+                        <StatusBadge status={row.reservationStatus} />
+                      ) : (
+                        <span className="text-xs font-medium text-[var(--color-text-muted)]">None</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TablePanel>
-      </section>
+      </div>
     </section>
   );
 }

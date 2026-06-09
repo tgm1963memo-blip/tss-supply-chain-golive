@@ -29,3 +29,4 @@ dist-ssr
 # Express read-only sync (local Python env and DBF cache)
 scripts/express-readonly-sync/.venv
 scripts/express-readonly-sync/cache/
+scripts/express-readonly-sync/logs/

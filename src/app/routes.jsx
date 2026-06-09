@@ -18,6 +18,7 @@ import ReturnCNPage from '../features/sales/ReturnCNPage.jsx';
 import CustomerRegistrationPage from '../features/sales/CustomerRegistrationPage.jsx';
 import CustomerMapPage from '../features/sales/CustomerMapPage.jsx';
 import SampleConsumablePage from '../features/sales/SampleConsumablePage.jsx';
+import SalesPromotionsPage from '../features/sales/SalesPromotionsPage.jsx';
 
 // Planning & Allocation
 import DemandPlanPage from '../features/planning/DemandPlanPage.jsx';
@@ -73,7 +74,15 @@ import CustomerBranchPage from '../features/master-data/CustomerBranchPage.jsx';
 import WarehouseMasterPage from '../features/master-data/WarehouseMasterPage.jsx';
 import LocationMasterPage from '../features/master-data/LocationMasterPage.jsx';
 import RoomCompanyPage from '../features/master-data/RoomCompanyPage.jsx';
+
+// Admin
 import SystemControlPage from '../features/admin/SystemControlPage.jsx';
+import ExpressSyncStatusPage from '../features/admin/ExpressSyncStatusPage.jsx';
+import DataSyncMonitorPage from '../features/admin/DataSyncMonitorPage.jsx';
+import ReadModelRefreshPage from '../features/admin/ReadModelRefreshPage.jsx';
+import UATSignoffPage from '../features/admin/UATSignoffPage.jsx';
+import IssueLogPage from '../features/admin/IssueLogPage.jsx';
+import GovernanceDecisionRegisterPage from '../features/admin/GovernanceDecisionRegisterPage.jsx';
 
 // Legacy mockup fallbacks (hidden from menu, reachable via redirect)
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
@@ -107,6 +116,7 @@ export default function AppRoutes() {
           <Route path="customer-registration" element={<CustomerRegistrationPage />} />
           <Route path="customer-map" element={<CustomerMapPage />} />
           <Route path="sample-consumable" element={<SampleConsumablePage />} />
+          <Route path="promotions" element={<SalesPromotionsPage />} />
         </Route>
 
         {/* Planning & Allocation */}
@@ -206,6 +216,12 @@ export default function AppRoutes() {
         </Route>
         <Route path="admin">
           <Route path="system-control" element={<SystemControlPage />} />
+          <Route path="sync-status" element={<ExpressSyncStatusPage />} />
+          <Route path="data-sync-monitor" element={<DataSyncMonitorPage />} />
+          <Route path="read-model-refresh" element={<ReadModelRefreshPage />} />
+          <Route path="uat-signoff" element={<UATSignoffPage />} />
+          <Route path="issue-log" element={<IssueLogPage />} />
+          <Route path="governance" element={<GovernanceDecisionRegisterPage />} />
           <Route path="*" element={<Navigate to="/admin/system-control" replace />} />
         </Route>
 

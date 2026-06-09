@@ -4,6 +4,7 @@ Adapted from tss-supply-chain-management/sync_scripts/sync_express.py
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -14,10 +15,11 @@ from decimal import Decimal
 from pathlib import Path
 
 from dbfread import DBF
-from dotenv import load_dotenv
 from supabase import create_client
 
-load_dotenv()
+from env_loader import ensure_sync_environment
+
+ensure_sync_environment()
 
 import express_table_mapping as config
 from safe_dbf_parser import (
@@ -225,10 +227,12 @@ def normalize_payload_for_target(target_table, payload):
 
 class ExpressSync:
     def __init__(self):
-        if not config.SUPABASE_URL or not config.SUPABASE_SERVICE_ROLE_KEY:
+        url = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL")
+        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        if not url or not key:
             raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for sync.")
 
-        self.supabase = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY)
+        self.supabase = create_client(url, key)
         self.last_cache_path = None
         self.copied_cache_files = set()
 
@@ -736,6 +740,16 @@ class ExpressSync:
                     status=final_status,
                 )
                 self.finish_job(job_id, final_status)
+                if final_status in ("completed", "completed_with_errors"):
+                    import sync_state
+                    if options.get("historical_mode"):
+                        sync_state.mark_historical_table(room_code, table_name)
+                    if (
+                        options.get("active_mode")
+                        and options.get("full")
+                        and table_name.upper() in sync_state.TRANSACTION_TABLES
+                    ):
+                        sync_state.mark_active_initial_full(room_code)
             elapsed = time.perf_counter() - table_started_at
             summary["elapsed_time"] = elapsed
             safe_print(f"[DONE] {table_name} completed in {elapsed:.1f}s")
@@ -858,6 +872,7 @@ class ExpressSync:
         }
 
         for room_code in rooms:
+            room_code = config.normalize_room_code(room_code)
             room_started_at = time.perf_counter()
             safe_print(f"[START] Sync room {room_code}")
             room_had_attempt = False
@@ -950,7 +965,11 @@ def parse_args(argv):
     parser.add_argument("--full", action="store_true", help="Explicitly allow full sync for selected tables.")
     parser.add_argument("--since-date", help="Override policy date window. Format: YYYY-MM-DD.")
     parser.add_argument("--policy", default="default", help="Policy profile to use. Currently only: default.")
-    parser.add_argument("--archive", action="store_true", help="Sync archive rooms instead of active rooms.")
+    parser.add_argument("--archive", action="store_true", help="Sync archive/historical rooms instead of active rooms.")
+    parser.add_argument("--active-rooms", action="store_true", help="Sync all active rooms (TSS, TSS-NV, CONSI).")
+    parser.add_argument("--historical-rooms", action="store_true", help="Sync historical one-time rooms.")
+    parser.add_argument("--months", type=int, help="Rolling window in months for transaction tables.")
+    parser.add_argument("--force", action="store_true", help="Force historical re-sync even if already completed.")
     parser.add_argument("--retry-failed", action="store_true", help="Retry failed records instead of reading DBF files.")
     parser.add_argument("--retry-limit", type=int, default=100, help="Maximum failed records to retry.")
     return parser.parse_args(argv)
@@ -985,14 +1004,63 @@ def main(argv=None):
     if args.limit is not None and args.limit <= 0:
         raise ValueError("--limit must be greater than 0")
 
-    since_date = parse_cli_date(args.since_date)
+    if args.months is not None and args.months <= 0:
+        raise ValueError("--months must be greater than 0")
 
-    if not args.rooms and not args.tables and not args.full:
+    since_date = parse_cli_date(args.since_date)
+    if args.months and not since_date:
+        since_date = date.today() - timedelta(days=args.months * 30)
+
+    import sync_state
+
+    options = {
+        "limit": args.limit,
+        "dry_run": args.dry_run,
+        "full": args.full,
+        "since_date": since_date,
+        "policy": args.policy,
+        "months": args.months,
+    }
+
+    if args.historical_rooms or args.archive:
+        allowed_rooms = config.HISTORICAL_ROOMS
+        options["historical_mode"] = True
+        if args.historical_rooms or args.full:
+            options["full"] = True
+        rooms = []
+        for room_code in config.HISTORICAL_ROOMS:
+            if sync_state.should_skip_historical_room(room_code, force=args.force):
+                safe_print(f"[SKIP_HISTORICAL] Room {room_code} already synced. Use --force to re-sync.")
+                continue
+            rooms.append(room_code)
+        if not rooms and (args.historical_rooms or args.archive):
+            safe_print("[SKIP_HISTORICAL] All historical rooms already synced.")
+            return 0
+    elif args.active_rooms:
+        allowed_rooms = config.ACTIVE_ROOMS
+        options["active_mode"] = True
+        rooms = list(config.ACTIVE_ROOMS)
+        transaction_tables = sync_state.TRANSACTION_TABLES
+        tables_requested = [t.upper() for t in (args.tables or [])]
+        if tables_requested and not args.full and not args.months:
+            if any(t in transaction_tables for t in tables_requested):
+                if any(
+                    sync_state.active_room_needs_full(room, table)
+                    for room in rooms
+                    for table in tables_requested
+                    if table in transaction_tables
+                ):
+                    options["full"] = True
+                    safe_print("[ACTIVE_POLICY] First full sync for transaction table(s) before rolling window.")
+    else:
+        allowed_rooms = config.HISTORICAL_ROOMS if args.archive else config.ACTIVE_ROOMS
+        rooms = args.rooms or allowed_rooms
+
+    if not args.rooms and not args.tables and not args.full and not args.active_rooms and not args.historical_rooms:
         print_blocked_full_sync_warning()
         return 2
 
-    allowed_rooms = config.ARCHIVE_ROOMS if args.archive else config.ACTIVE_ROOMS
-    rooms = args.rooms or allowed_rooms
+    rooms = [config.normalize_room_code(r) for r in rooms]
     tables = [table.upper() for table in (args.tables or config.DBF_TABLES)]
 
     for room_code in rooms:
@@ -1006,13 +1074,7 @@ def main(argv=None):
     sync.sync_rooms(
         rooms,
         tables,
-        options={
-            "limit": args.limit,
-            "dry_run": args.dry_run,
-            "full": args.full,
-            "since_date": since_date,
-            "policy": args.policy,
-        },
+        options=options,
     )
     return 0
 

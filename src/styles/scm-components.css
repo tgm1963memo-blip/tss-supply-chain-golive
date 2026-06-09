@@ -1,6 +1,6 @@
 @layer components {
   .tgm-page {
-    @apply grid gap-6;
+    @apply grid gap-4;
   }
 
   .tgm-card {
@@ -11,11 +11,11 @@
   }
 
   .tgm-card-padded {
-    @apply tgm-card p-5 sm:p-6;
+    @apply tgm-card p-4 sm:p-5;
   }
 
   .tgm-button-primary {
-    @apply inline-flex min-h-10 items-center justify-center rounded-md px-4 text-sm font-semibold transition;
+    @apply inline-flex min-h-9 items-center justify-center rounded-md px-3 py-1.5 text-sm font-semibold transition;
     background-color: var(--color-primary);
     color: #111111;
   }
@@ -25,7 +25,7 @@
   }
 
   .tgm-button-secondary {
-    @apply inline-flex min-h-10 items-center justify-center rounded-md border px-4 text-sm font-semibold transition;
+    @apply inline-flex min-h-9 items-center justify-center rounded-md border px-3 py-1.5 text-sm font-semibold transition;
     border-color: var(--color-border);
     background-color: var(--color-surface);
     color: var(--color-text-main);
@@ -36,12 +36,14 @@
   }
 
   .tgm-input {
-    min-height: 2.5rem;
+    min-height: 2.25rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     background-color: var(--color-surface);
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: var(--color-text-main);

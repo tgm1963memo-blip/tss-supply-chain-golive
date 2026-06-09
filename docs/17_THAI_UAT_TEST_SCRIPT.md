@@ -154,6 +154,27 @@
 
 ---
 
+## การทดสอบหลังเปิด Auto Sync
+
+**เงื่อนไข:** ติดตั้ง Windows Task Scheduler ตาม `docs/22_AUTOMATED_EXPRESS_SYNC_AGENT.md` และรอให้ agent รันอย่างน้อย 1 รอบ (active rolling + read model refresh)
+
+| ลำดับ | หัวข้อทดสอบ | Expected Result | Actual Result | PASS / FAIL / BLOCKED | หมายเหตุ |
+|---|---|---|---|---|---|
+| F.1 | ตรวจ Last Sync Time | System Control → Automated Sync Agent แสดง Last active rolling sync / Last master sync เป็นวันที่ล่าสุด (ไม่เป็น —) | | | |
+| F.2 | ตรวจ SO ใหม่เข้า Supabase | สร้าง/แก้ไข SO ใน Express (room TSS) แล้วรอ rolling sync — หน้า Sales Order แสดงเอกสารใหม่ภายใน ~15–30 นาที | | | |
+| F.3 | ตรวจ Stock update | แก้ยอด STLOC ใน Express แล้วรอ sync — Stock Balance / Available Stock อัปเดตตามข้อมูลล่าสุด | | | |
+| F.4 | ตรวจ Dashboard update | Management Dashboard / Sales Overview / Stock Overview สะท้อนข้อมูลหลัง sync (อ่านจาก view/summary ไม่โหลด raw table ใหญ่) | | | |
+| F.5 | ตรวจว่า Express Write-back ยัง Disabled | System Control แสดง Express write-back disabled = Yes, Safe Mode ยังทำงาน, ไม่มีการเขียนกลับ DBF | | | |
+| F.6 | ตรวจ Log / Failed records | `scripts/express-readonly-sync/logs/` ไม่มี error ซ้ำ และ failed records = 0 หรือมีเหตุผลที่ยอมรับได้ | | | |
+
+**คำสั่งตรวจสอบ (IT):**
+```bat
+cd scripts\express-readonly-sync
+.venv\Scripts\python.exe sync_status_check.py
+```
+
+---
+
 ## Sign-off
 
 ผู้ทดสอบ: ___________________________

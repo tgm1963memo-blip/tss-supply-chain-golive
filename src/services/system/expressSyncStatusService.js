@@ -38,7 +38,7 @@ async function fetchLatestSyncJob(roomCode) {
   try {
     const { data, error } = await supabase
       .from('sync_jobs')
-      .select('source_table, status, started_at, finished_at, last_error, created_at')
+      .select('source_table, status, started_at, finished_at, last_error, created_at, job_name')
       .eq('room_code', roomCode)
       .order('created_at', { ascending: false })
       .limit(1);
@@ -50,6 +50,51 @@ async function fetchLatestSyncJob(roomCode) {
   } catch (err) {
     return { job: null, error: err?.message || 'sync_jobs query failed' };
   }
+}
+
+async function fetchLatestAgentJob(sourceTable) {
+  if (!supabase) {
+    return { job: null, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('sync_jobs')
+      .select('job_name, source_table, status, started_at, finished_at, last_error, created_at')
+      .eq('room_code', 'SYSTEM')
+      .eq('source_table', sourceTable)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      return { job: null, error: error.message };
+    }
+    return { job: data?.[0] || null, error: null };
+  } catch (err) {
+    return { job: null, error: err?.message || 'agent sync_jobs query failed' };
+  }
+}
+
+function resolveAgentMode(agentJobs) {
+  const hasAgentRuns = Object.values(agentJobs).some((entry) => entry?.job);
+  if (!hasAgentRuns) {
+    return 'unknown';
+  }
+
+  const rolling = agentJobs.activeRolling?.job;
+  if (rolling?.finished_at || rolling?.started_at) {
+    const ts = new Date(rolling.finished_at || rolling.started_at).getTime();
+    const ageMs = Date.now() - ts;
+    if (ageMs < 24 * 60 * 60 * 1000) {
+      return 'scheduled';
+    }
+  }
+
+  return hasAgentRuns ? 'manual' : 'unknown';
+}
+
+function jobTimestamp(job) {
+  return job?.finished_at || job?.started_at || null;
 }
 
 async function fetchFailedRecordCount(roomCode) {
@@ -87,6 +132,7 @@ export function getExpressSyncReadiness() {
     syncScriptPath: 'scripts/express-readonly-sync/sync_express_readonly.py',
     setupDoc: 'docs/20_EXPRESS_READONLY_SYNC_SETUP.md',
     validationDoc: 'docs/21_EXPRESS_SYNC_UAT_VALIDATION.md',
+    automationDoc: 'docs/22_AUTOMATED_EXPRESS_SYNC_AGENT.md',
     readOnlyMode: true,
     expressWriteBackDisabled: true,
     note: 'Sync runs server-side with SUPABASE_SERVICE_ROLE_KEY — never expose service role in frontend.',
@@ -116,6 +162,19 @@ export async function getExpressSyncStatus({ roomCode = DEFAULT_ROOM } = {}) {
       expressWriteBackDisabled: true,
       message: 'Supabase not configured — configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
       readiness,
+      automatedSyncAgent: {
+        installed: false,
+        agentMode: 'Unknown',
+        lastActiveRollingSync: null,
+        lastMasterSync: null,
+        lastReadModelRefresh: null,
+        historicalSyncCompleted: null,
+        failedRecords: null,
+        readOnlyModeActive: true,
+        expressWriteBackDisabled: true,
+        notInstalledMessage: 'Automated Sync Agent not installed yet.',
+        setupDoc: 'docs/22_AUTOMATED_EXPRESS_SYNC_AGENT.md',
+      },
     };
   }
 
@@ -134,6 +193,34 @@ export async function getExpressSyncStatus({ roomCode = DEFAULT_ROOM } = {}) {
   if (jobError) {
     errors.syncJobs = jobError;
   }
+
+  const [activeRolling, masterDaily, readModelRefresh, historicalOnce] = await Promise.all([
+    fetchLatestAgentJob('active_rolling'),
+    fetchLatestAgentJob('master_daily'),
+    fetchLatestAgentJob('read_model_refresh'),
+    fetchLatestAgentJob('historical_once'),
+  ]);
+
+  const agentJobs = {
+    activeRolling,
+    masterDaily,
+    readModelRefresh,
+    historicalOnce,
+  };
+
+  const agentErrors = [
+    activeRolling.error,
+    masterDaily.error,
+    readModelRefresh.error,
+    historicalOnce.error,
+  ].filter(Boolean);
+
+  if (agentErrors.length) {
+    errors.agentJobs = agentErrors.join('; ');
+  }
+
+  const agentMode = resolveAgentMode(agentJobs);
+  const agentInstalled = agentMode !== 'unknown';
 
   const { count: failedRecords, error: failedError } = await fetchFailedRecordCount(roomCode);
   if (failedError) {
@@ -167,5 +254,18 @@ export async function getExpressSyncStatus({ roomCode = DEFAULT_ROOM } = {}) {
     errors: Object.keys(errors).length ? errors : null,
     message,
     readiness,
+    automatedSyncAgent: {
+      installed: agentInstalled,
+      agentMode: agentMode === 'unknown' ? 'Unknown' : agentMode === 'scheduled' ? 'Scheduled' : 'Manual',
+      lastActiveRollingSync: jobTimestamp(activeRolling.job),
+      lastMasterSync: jobTimestamp(masterDaily.job),
+      lastReadModelRefresh: jobTimestamp(readModelRefresh.job),
+      historicalSyncCompleted: historicalOnce.job?.status === 'completed' ? true : historicalOnce.job ? false : null,
+      failedRecords,
+      readOnlyModeActive: true,
+      expressWriteBackDisabled: true,
+      notInstalledMessage: agentInstalled ? null : 'Automated Sync Agent not installed yet.',
+      setupDoc: 'docs/22_AUTOMATED_EXPRESS_SYNC_AGENT.md',
+    },
   };
 }

@@ -37,6 +37,7 @@ export const navigationGroups = [
       { label: 'Customer Registration', path: '/sales/customer-registration' },
       { label: 'Customer Map', path: '/sales/customer-map' },
       { label: 'Sample & Consumable', path: '/sales/sample-consumable' },
+      { label: 'Promotion / เคาะราคาห้าง', path: '/sales/promotions' },
     ],
   },
   {
@@ -111,6 +112,12 @@ export const navigationGroups = [
     icon: Settings,
     items: [
       { label: 'System Control', path: '/admin/system-control' },
+      { label: 'Express Sync Status', path: '/admin/sync-status' },
+      { label: 'Data Sync Monitor', path: '/admin/data-sync-monitor' },
+      { label: 'Read Model Refresh', path: '/admin/read-model-refresh' },
+      { label: 'UAT Signoff', path: '/admin/uat-signoff' },
+      { label: 'Issue Log', path: '/admin/issue-log' },
+      { label: 'Governance Decision Register', path: '/admin/governance' },
     ],
   },
   {

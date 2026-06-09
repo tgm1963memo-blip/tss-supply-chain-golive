@@ -254,6 +254,74 @@ export default function SystemControlPage() {
       </TablePanel>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Automated Sync Agent</h3>
+        <Badge type="neutral">Phase 3J</Badge>
+      </div>
+
+      {expressSync?.automatedSyncAgent?.notInstalledMessage ? (
+        <Alert variant="info">{expressSync.automatedSyncAgent.notInstalledMessage}</Alert>
+      ) : null}
+
+      <TablePanel>
+        <table className="tgm-table">
+          <tbody>
+            <tr>
+              <th className="w-[220px] text-left">Agent mode</th>
+              <td>{expressSync?.automatedSyncAgent?.agentMode || 'Unknown'}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Last active rolling sync</th>
+              <td>
+                {expressSync?.automatedSyncAgent?.lastActiveRollingSync
+                  ? new Date(expressSync.automatedSyncAgent.lastActiveRollingSync).toLocaleString()
+                  : '—'}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Last master sync</th>
+              <td>
+                {expressSync?.automatedSyncAgent?.lastMasterSync
+                  ? new Date(expressSync.automatedSyncAgent.lastMasterSync).toLocaleString()
+                  : '—'}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Last read model refresh</th>
+              <td>
+                {expressSync?.automatedSyncAgent?.lastReadModelRefresh
+                  ? new Date(expressSync.automatedSyncAgent.lastReadModelRefresh).toLocaleString()
+                  : '—'}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Historical sync completed</th>
+              <td>
+                {expressSync?.automatedSyncAgent?.historicalSyncCompleted === null
+                  ? '—'
+                  : yesNo(expressSync?.automatedSyncAgent?.historicalSyncCompleted)}
+              </td>
+            </tr>
+            <tr>
+              <th className="text-left">Failed records</th>
+              <td>{formatCount(expressSync?.automatedSyncAgent?.failedRecords ?? expressSync?.failedRecords)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Read-only mode active</th>
+              <td>{yesNo(expressSync?.automatedSyncAgent?.readOnlyModeActive ?? true)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Express write-back disabled</th>
+              <td>{yesNo(expressSync?.automatedSyncAgent?.expressWriteBackDisabled ?? true)}</td>
+            </tr>
+            <tr>
+              <th className="text-left">Automation guide</th>
+              <td className="font-mono text-xs">docs/22_AUTOMATED_EXPRESS_SYNC_AGENT.md</td>
+            </tr>
+          </tbody>
+        </table>
+      </TablePanel>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-[var(--color-text-main)]">Live Read-only UAT Status</h3>
         <Badge type="success">Phase 3C</Badge>
       </div>
