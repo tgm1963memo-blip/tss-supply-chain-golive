@@ -50,6 +50,22 @@ function summarize(rows) {
   };
 }
 
+function mapCompactConsiRow(row) {
+  const balance = Number(row.qty_on_branch || 0);
+  return {
+    branchCode: row.branch_code,
+    branchName: row.branch_name || row.branch_code,
+    customerCode: row.customer_code,
+    productCode: row.product_code,
+    productName: row.product_name,
+    balanceQty: balance,
+    minQty: 0,
+    maxQty: 0,
+    status: balance <= 0 ? 'empty' : 'normal',
+    lastSyncedAt: row.synced_at,
+  };
+}
+
 export async function getBranchStockPageData(filters = {}) {
   let rows = [];
   let source = 'empty';
@@ -57,15 +73,30 @@ export async function getBranchStockPageData(filters = {}) {
   if (isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase
-        .from('sc_web_consi_branch_stock_view')
+        .from('sc_rm_consi_branch_stock')
         .select('*')
         .limit(2000);
       if (!error && data?.length) {
-        rows = data.map(mapRow);
+        rows = data.map(mapCompactConsiRow);
         source = 'live';
       }
     } catch {
       rows = [];
+    }
+
+    if (rows.length === 0) {
+      try {
+        const { data, error } = await supabase
+          .from('sc_web_consi_branch_stock_view')
+          .select('*')
+          .limit(2000);
+        if (!error && data?.length) {
+          rows = data.map(mapRow);
+          source = 'live';
+        }
+      } catch {
+        rows = [];
+      }
     }
   }
 

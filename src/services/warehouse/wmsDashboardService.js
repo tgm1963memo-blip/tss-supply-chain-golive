@@ -26,15 +26,22 @@ export async function getWmsDashboardData() {
 
   if (isSupabaseConfigured()) {
     try {
-      let data = null;
-      let error = null;
-
       const primary = await supabase
-        .from('sc_web_stock_balance_view')
+        .from('sc_rm_stock_balance')
         .select('product_code, product_name, qty_on_hand, synced_at')
         .limit(5000);
-      data = primary.data;
-      error = primary.error;
+
+      let data = primary.data;
+      let error = primary.error;
+
+      if (error || !(data || []).length) {
+        const stockView = await supabase
+          .from('sc_web_stock_balance_view')
+          .select('product_code, product_name, qty_on_hand, synced_at')
+          .limit(5000);
+        data = stockView.data;
+        error = stockView.error;
+      }
 
       if (error || !(data || []).length) {
         const fallback = await supabase

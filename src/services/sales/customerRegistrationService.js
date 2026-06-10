@@ -70,7 +70,7 @@ function normalizeNumericFields(payload) {
   return next;
 }
 
-function mapCustomerRow(row) {
+function mapCustomerRow(row, sourceTable = 'sc_rm_customer_master') {
   if (!row) return null;
   return {
     customer_code: row.customer_code || '',
@@ -78,7 +78,7 @@ function mapCustomerRow(row) {
     customer_group: row.customer_group || '',
     sales_code: row.sales_code || '',
     room_code: row.room_code || '',
-    source: row.source_file ? 'sc_web_customer_master_view' : 'sc_express_customers',
+    source: sourceTable,
   };
 }
 
@@ -88,6 +88,17 @@ export async function searchExistingCustomers(query, limit = 20) {
   if (!q) return [];
 
   const pattern = `%${q}%`;
+
+  const { data: compactRows, error: compactError } = await supabase
+    .from('sc_rm_customer_master')
+    .select('customer_code, customer_name, customer_group, room_code, channel')
+    .or(`customer_code.ilike.${pattern},customer_name.ilike.${pattern}`)
+    .limit(limit);
+
+  if (!compactError && compactRows?.length) {
+    return compactRows.map((row) => mapCustomerRow({ ...row, sales_code: '' }));
+  }
+
   const { data: viewRows, error: viewError } = await supabase
     .from('sc_web_customer_master_view')
     .select('customer_code, customer_name, customer_group, sales_code, room_code, source_file')
@@ -95,7 +106,7 @@ export async function searchExistingCustomers(query, limit = 20) {
     .limit(limit);
 
   if (!viewError && viewRows?.length) {
-    return viewRows.map(mapCustomerRow);
+    return viewRows.map((row) => mapCustomerRow(row, 'sc_web_customer_master_view'));
   }
 
   const { data: fallbackRows, error: fallbackError } = await supabase
@@ -105,13 +116,23 @@ export async function searchExistingCustomers(query, limit = 20) {
     .limit(limit);
 
   if (fallbackError) throw fallbackError;
-  return (fallbackRows || []).map(mapCustomerRow);
+  return (fallbackRows || []).map((row) => mapCustomerRow(row, 'sc_express_customers'));
 }
 
 export async function loadExistingCustomerSnapshot(customerCode) {
   ensureSupabase();
   const code = (customerCode || '').trim();
   if (!code) return null;
+
+  const { data: compactRow } = await supabase
+    .from('sc_rm_customer_master')
+    .select('*')
+    .eq('customer_code', code)
+    .maybeSingle();
+
+  if (compactRow) {
+    return { ...mapCustomerRow(compactRow), raw: compactRow, loaded_at: new Date().toISOString() };
+  }
 
   const { data: viewRow } = await supabase
     .from('sc_web_customer_master_view')
@@ -120,7 +141,7 @@ export async function loadExistingCustomerSnapshot(customerCode) {
     .maybeSingle();
 
   if (viewRow) {
-    return { ...mapCustomerRow(viewRow), raw: viewRow, loaded_at: new Date().toISOString() };
+    return { ...mapCustomerRow(viewRow, 'sc_web_customer_master_view'), raw: viewRow, loaded_at: new Date().toISOString() };
   }
 
   const { data: fallbackRow, error } = await supabase
@@ -131,7 +152,7 @@ export async function loadExistingCustomerSnapshot(customerCode) {
 
   if (error) throw error;
   if (!fallbackRow) return null;
-  return { ...mapCustomerRow(fallbackRow), raw: fallbackRow, loaded_at: new Date().toISOString() };
+  return { ...mapCustomerRow(fallbackRow, 'sc_express_customers'), raw: fallbackRow, loaded_at: new Date().toISOString() };
 }
 
 export function isStorageConfigured() {

@@ -135,10 +135,28 @@ function buildSeedRows() {
 }
 
 async function loadLiveStockBaseRows() {
-  const { data: stockRows, error: stockErr } = await supabase
-    .from('sc_web_stock_balance_view')
-    .select('product_code, product_name, product_group, qty_on_hand')
+  let stockRows = null;
+  let stockErr = null;
+
+  const compact = await supabase
+    .from('sc_rm_stock_balance')
+    .select('product_code, product_name, qty_on_hand, qty_available')
     .limit(5000);
+  if (!compact.error && (compact.data || []).length) {
+    stockRows = (compact.data || []).map((row) => ({
+      product_code: row.product_code,
+      product_name: row.product_name,
+      product_group: '',
+      qty_on_hand: row.qty_on_hand,
+    }));
+  } else {
+    const legacy = await supabase
+      .from('sc_web_stock_balance_view')
+      .select('product_code, product_name, product_group, qty_on_hand')
+      .limit(5000);
+    stockRows = legacy.data;
+    stockErr = legacy.error;
+  }
 
   if (stockErr) throw stockErr;
 

@@ -168,6 +168,14 @@ export async function searchCustomersForReturn(query, limit = 20) {
   const q = (query || '').trim();
   if (!q) return [];
   const pattern = `%${q}%`;
+
+  const { data: compactData, error: compactError } = await supabase
+    .from('sc_rm_customer_master')
+    .select('customer_code, customer_name')
+    .or(`customer_code.ilike.${pattern},customer_name.ilike.${pattern}`)
+    .limit(limit);
+  if (!compactError && compactData?.length) return compactData;
+
   const { data, error } = await supabase
     .from('sc_web_customer_master_view')
     .select('customer_code, customer_name')

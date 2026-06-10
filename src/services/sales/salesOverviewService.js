@@ -77,21 +77,76 @@ function applyRowFilters(rows, filters) {
   });
 }
 
+function mapDailySummaryRow(row) {
+  return {
+    id: `${row.room_code}:${row.sales_date}:${row.customer_code}:${row.product_code}`,
+    date: row.sales_date || '',
+    customerCode: row.customer_code || '',
+    customerName: row.customer_name || row.customer_code || '',
+    customerGroup: '',
+    productGroup: row.product_group || '',
+    salesperson: '',
+    qty: Number(row.sales_qty || 0),
+    amount: Number(row.sales_amount || 0),
+    channel: 'invoice',
+    roomCode: row.room_code || DEFAULT_ROOM,
+    documentNo: `${row.invoice_count || 0} inv`,
+  };
+}
+
 async function loadCustomerMap(roomCode) {
   if (!isSupabaseConfigured()) return {};
   try {
     const { data, error } = await supabase
+      .from('sc_rm_customer_master')
+      .select('customer_code,customer_name,customer_group')
+      .eq('room_code', roomCode);
+    if (!error && data?.length) {
+      return Object.fromEntries(data.map((row) => [row.customer_code, row]));
+    }
+    const fallback = await supabase
       .from('sc_express_customers')
       .select('customer_code,customer_name,customer_group,sales_code')
       .eq('room_code', roomCode);
-    if (error) return {};
-    return Object.fromEntries((data || []).map((row) => [row.customer_code, row]));
+    if (fallback.error) return {};
+    return Object.fromEntries((fallback.data || []).map((row) => [row.customer_code, row]));
   } catch {
     return {};
   }
 }
 
+async function loadDailySummaryRows(filters) {
+  if (!isSupabaseConfigured()) return [];
+  ensureClient();
+  const f = normalizeFilters(filters);
+
+  try {
+    let query = supabase
+      .from('sc_rm_sales_daily_summary')
+      .select('room_code,sales_date,customer_code,customer_name,product_code,product_name,product_group,sales_qty,sales_amount,invoice_count')
+      .eq('room_code', f.roomCode)
+      .order('sales_date', { ascending: false })
+      .limit(500);
+
+    if (f.dateFrom) query = query.gte('sales_date', f.dateFrom);
+    if (f.dateTo) query = query.lte('sales_date', f.dateTo);
+
+    const { data, error } = await query;
+    if (!error && data?.length) {
+      return data.map(mapDailySummaryRow);
+    }
+  } catch {
+    // fall through to legacy invoice load
+  }
+  return [];
+}
+
 async function loadInvoiceRows(filters) {
+  const summaryRows = await loadDailySummaryRows(filters);
+  if (summaryRows.length) {
+    return summaryRows;
+  }
+
   if (!isSupabaseConfigured()) return [];
   ensureClient();
   const f = normalizeFilters(filters);
@@ -121,6 +176,35 @@ async function loadDashboardMonthly(filters) {
   if (!isSupabaseConfigured()) return [];
   ensureClient();
   const f = normalizeFilters(filters);
+
+  try {
+    let monthlyQuery = supabase
+      .from('sc_rm_sales_monthly_summary')
+      .select('room_code,sales_month,customer_code,product_code,sales_qty,sales_amount,invoice_count')
+      .eq('room_code', f.roomCode)
+      .order('sales_month', { ascending: true })
+      .limit(200);
+
+    if (f.dateFrom) monthlyQuery = monthlyQuery.gte('sales_month', String(f.dateFrom).slice(0, 7));
+    if (f.dateTo) monthlyQuery = monthlyQuery.lte('sales_month', String(f.dateTo).slice(0, 7));
+
+    const { data: monthlyData, error: monthlyError } = await monthlyQuery;
+    if (!monthlyError && monthlyData?.length) {
+      const grouped = new Map();
+      monthlyData.forEach((row) => {
+        const key = row.sales_month;
+        if (!key) return;
+        grouped.set(key, (grouped.get(key) || 0) + (Number(row.sales_amount) || Number(row.sales_qty) || 0));
+      });
+      return [...grouped.entries()].map(([doc_date, total_qty]) => ({
+        room_code: f.roomCode,
+        doc_date: `${doc_date}-01`,
+        total_qty,
+      }));
+    }
+  } catch {
+    // fall through
+  }
 
   try {
     let query = supabase
@@ -157,6 +241,7 @@ export async function getSalesOverviewSummary(filters = {}) {
     ? Math.max(1, Math.ceil((new Date(dates[dates.length - 1]) - new Date(dates[0])) / (1000 * 60 * 60 * 24)) + 1)
     : 1;
 
+  const usedCompact = rows.some((row) => String(row.documentNo || '').includes('inv'));
   return {
     totalSales,
     totalQty,
@@ -164,7 +249,7 @@ export async function getSalesOverviewSummary(filters = {}) {
     orderCount: orders.size,
     averageSalesPerDay: totalSales / daySpan,
     rowCount: rows.length,
-    dataSource: rows.length ? 'sc_express_invoices' : 'empty',
+    dataSource: rows.length ? (usedCompact ? 'sc_rm_sales_daily_summary' : 'sc_express_invoices') : 'empty',
   };
 }
 

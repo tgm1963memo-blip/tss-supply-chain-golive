@@ -80,23 +80,55 @@ export async function listSkuAdminProducts(filters = {}) {
 
   if (isSupabaseConfigured()) {
     try {
-      let query = supabase
-        .from('sc_web_sku_admin_view')
+      let compactQuery = supabase
+        .from('sc_rm_product_master')
         .select('*')
         .order('product_code', { ascending: true })
         .limit(filters.limit || 500);
 
-      if (filters.roomCode) query = query.eq('room_code', filters.roomCode);
-      if (filters.productGroup) query = query.eq('product_group', filters.productGroup);
-      if (filters.activeOnly) query = query.ilike('active_status', '%active%');
+      if (filters.roomCode) compactQuery = compactQuery.eq('room_code', filters.roomCode);
+      if (filters.productGroup) compactQuery = compactQuery.eq('product_group', filters.productGroup);
+      if (filters.activeOnly) compactQuery = compactQuery.ilike('active_status', '%active%');
 
-      const { data, error } = await query;
-      if (!error && data?.length) {
-        rows = data.map(mapProduct);
+      const { data: compactData, error: compactError } = await compactQuery;
+      if (!compactError && compactData?.length) {
+        rows = compactData.map((row) => mapProduct({
+          ...row,
+          uom: row.unit_code,
+          plant_code: '',
+          pack_size: 0,
+          min_stock: 0,
+          shelf_life_days: 0,
+          lead_time_days: 0,
+          moq: 0,
+          forecast_class: 'standard',
+        }));
         source = 'live';
       }
     } catch {
       rows = [];
+    }
+
+    if (rows.length === 0) {
+      try {
+        let query = supabase
+          .from('sc_web_sku_admin_view')
+          .select('*')
+          .order('product_code', { ascending: true })
+          .limit(filters.limit || 500);
+
+        if (filters.roomCode) query = query.eq('room_code', filters.roomCode);
+        if (filters.productGroup) query = query.eq('product_group', filters.productGroup);
+        if (filters.activeOnly) query = query.ilike('active_status', '%active%');
+
+        const { data, error } = await query;
+        if (!error && data?.length) {
+          rows = data.map(mapProduct);
+          source = 'live';
+        }
+      } catch {
+        rows = [];
+      }
     }
   }
 

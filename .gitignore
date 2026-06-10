@@ -30,3 +30,11 @@ dist-ssr
 scripts/express-readonly-sync/.venv
 scripts/express-readonly-sync/cache/
 scripts/express-readonly-sync/logs/
+
+# Local mirror (raw DBF mirror + compact read model build)
+scripts/local-mirror/data/
+scripts/local-mirror/logs/
+scripts/local-mirror/cache/
+*.duckdb
+*.sqlite
+*.sqlite3

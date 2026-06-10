@@ -51,10 +51,14 @@ export async function getAtpWorkbenchData(filters = {}) {
   }
 
   try {
-    let [atpRes, shortageRes, reservationRes] = await Promise.all([
+    let [atpRes, openSoRes, shortageRes, reservationRes] = await Promise.all([
       supabase
-        .from('sc_web_atp_view')
-        .select('room_code, product_code, product_name, product_group, on_hand_qty, atp_qty')
+        .from('sc_rm_stock_balance')
+        .select('room_code, product_code, product_name, qty_on_hand, qty_available, synced_at')
+        .limit(5000),
+      supabase
+        .from('sc_rm_open_so_lines')
+        .select('product_code, remaining_qty, order_qty')
         .limit(5000),
       supabase
         .from('sc_web_shortage_view')
@@ -66,6 +70,16 @@ export async function getAtpWorkbenchData(filters = {}) {
         .eq('status', 'active')
         .limit(5000),
     ]);
+
+    if (atpRes.error || !(atpRes.data || []).length) {
+      const atpViewRes = await supabase
+        .from('sc_web_atp_view')
+        .select('room_code, product_code, product_name, product_group, on_hand_qty, atp_qty')
+        .limit(5000);
+      if (!atpViewRes.error && (atpViewRes.data || []).length) {
+        atpRes = atpViewRes;
+      }
+    }
 
     if (atpRes.error || !(atpRes.data || []).length) {
       const inventoryRes = await supabase
@@ -86,12 +100,33 @@ export async function getAtpWorkbenchData(filters = {}) {
       };
     } else if (atpRes.error) {
       throw atpRes.error;
+    } else if (atpRes.data?.[0]?.qty_on_hand !== undefined) {
+      atpRes = {
+        data: (atpRes.data || []).map((row) => ({
+          room_code: row.room_code,
+          product_code: row.product_code,
+          product_name: row.product_name,
+          product_group: '',
+          on_hand_qty: row.qty_on_hand,
+          atp_qty: row.qty_available ?? row.qty_on_hand,
+        })),
+        error: null,
+      };
     }
 
-    const openSoBySku = (shortageRes.data || []).reduce((acc, row) => {
-      acc[row.product_code] = (acc[row.product_code] || 0) + Number(row.open_so_qty || 0);
+    const openSoFromCompact = (openSoRes.data || []).reduce((acc, row) => {
+      if (!openSoRes.error && row.product_code) {
+        acc[row.product_code] = (acc[row.product_code] || 0) + Number(row.remaining_qty || row.order_qty || 0);
+      }
       return acc;
     }, {});
+
+    const openSoBySku = Object.keys(openSoFromCompact).length
+      ? openSoFromCompact
+      : (shortageRes.data || []).reduce((acc, row) => {
+        acc[row.product_code] = (acc[row.product_code] || 0) + Number(row.open_so_qty || 0);
+        return acc;
+      }, {});
 
     const reservedBySku = (reservationRes.data || []).reduce((acc, row) => {
       acc[row.product_code] = (acc[row.product_code] || 0) + Number(row.reserved_qty || 0);

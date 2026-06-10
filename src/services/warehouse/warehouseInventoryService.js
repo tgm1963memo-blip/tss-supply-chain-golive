@@ -62,12 +62,22 @@ async function enrichWithProductNames(rows) {
 
   const codes = [...new Set(rows.map((r) => r.productCode))];
   const { data } = await supabase
-    .from('sc_web_stock_balance_view')
+    .from('sc_rm_stock_balance')
     .select('product_code, product_name')
     .in('product_code', codes)
     .limit(5000);
 
   const names = Object.fromEntries((data || []).map((r) => [r.product_code, r.product_name]));
+  if (Object.keys(names).length === 0) {
+    const fallback = await supabase
+      .from('sc_web_stock_balance_view')
+      .select('product_code, product_name')
+      .in('product_code', codes)
+      .limit(5000);
+    (fallback.data || []).forEach((r) => {
+      names[r.product_code] = r.product_name;
+    });
+  }
   return rows.map((row) => ({
     ...row,
     productName: row.productName || names[row.productCode] || row.productCode,

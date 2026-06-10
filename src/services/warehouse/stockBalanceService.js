@@ -1,9 +1,54 @@
 import { supabase } from '../../lib/supabaseClient.js';
 
+function mapCompactStockRow(row) {
+  return {
+    roomCode: row.room_code,
+    productCode: row.product_code,
+    warehouseCode: row.warehouse_code,
+    locationCode: row.location_code,
+    lotNo: row.lot_no,
+    erpOnHandQty: Number(row.qty_on_hand || 0),
+    ledgerDeltaQty: 0,
+    calculatedOnHandQty: Number(row.qty_on_hand || 0),
+    reservedQty: Number(row.qty_reserved || 0),
+    availableQty: Number(row.qty_available ?? row.qty_on_hand ?? 0),
+    futureSupplyQty: 0,
+    sourceUpdatedAt: row.synced_at,
+  };
+}
+
 export async function listStockBalances(filters = {}) {
   if (!supabase) {
     console.error('Supabase client is not configured.');
     return [];
+  }
+
+  let compactQuery = supabase
+    .from('sc_rm_stock_balance')
+    .select(`
+      room_code,
+      product_code,
+      product_name,
+      warehouse_code,
+      location_code,
+      lot_no,
+      qty_on_hand,
+      qty_reserved,
+      qty_available,
+      synced_at
+    `)
+    .limit(filters.limit || 500);
+
+  if (filters.roomCode) compactQuery = compactQuery.eq('room_code', filters.roomCode);
+  if (filters.productCode) compactQuery = compactQuery.ilike('product_code', `%${filters.productCode}%`);
+  if (filters.warehouseCode) compactQuery = compactQuery.eq('warehouse_code', filters.warehouseCode);
+  if (filters.locationCode) compactQuery = compactQuery.eq('location_code', filters.locationCode);
+  if (filters.onlyAvailable) compactQuery = compactQuery.gt('qty_available', 0);
+  if (filters.onlyShortStock) compactQuery = compactQuery.lte('qty_available', 0);
+
+  const { data: compactData, error: compactError } = await compactQuery;
+  if (!compactError && compactData?.length) {
+    return compactData.map(mapCompactStockRow);
   }
 
   let query = supabase
