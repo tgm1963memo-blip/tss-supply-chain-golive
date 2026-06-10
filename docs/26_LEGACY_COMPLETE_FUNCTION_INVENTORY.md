@@ -11,14 +11,16 @@
 |--------|------:|
 | Legacy `pg*` functions in index.html | 24 |
 | Registry entries | 26 |
-| **COMPLETE** | 8 |
-| **PARTIAL** | 11 |
+| **COMPLETE** | 15 |
+| **PARTIAL** | 7 |
 | **MISSING** | 0 |
 | **BLOCKED_BY_GOVERNANCE** | 7 |
 
 **Sales module:** all 8 registry entries **COMPLETE** (0 PARTIAL)
 
-**COMPLETE (global):** `pgMySales`, `pgForecast`, `pgCustMap`, `pgCustReg`, `pgSample`, Sales Order, Promotions, Return/CN
+**Planning module:** all 7 routable registry entries **COMPLETE** (0 PARTIAL). Legacy `pgProdPlan`, `pgProdSummary`, `pgForecastDoc` remain **BLOCKED_BY_GOVERNANCE**.
+
+**COMPLETE (global):** Sales (8), Planning (7) — see audit MD for full list
 
 **Critical handlers with route + page:** all 12 critical handlers mapped (0 MISSING)
 
@@ -72,15 +74,20 @@ A function is **COMPLETE** only when all of:
 
 ## Planning & allocation
 
-| Module | Menu key | Handler | Route | Page | Status | Gap | Action |
-|--------|----------|---------|-------|------|--------|-----|--------|
-| Planning | planstock | pgPlanStock | `/planning/stock` | `StockPlanningPage.jsx` | **PARTIAL** | PlaceholderCard | Real planning UI + read models |
-| Planning | po | pgPO | `/planning/production-purchase` | `ProductionPurchaseSuggestionPage.jsx` | **PARTIAL** | Needs tests | Add tests |
-| Planning | planbook | pgPlanBooking | `/planning/reservation` | `ReservationWorkbenchPage.jsx` | **PARTIAL** | No tests | Add reservation tests |
-| Planning | booksummary | pgBookingSummary | `/planning/reservation-summary` | `ReservationSummaryPage.jsx` | **PARTIAL** | No tests | Add summary tests |
-| Planning | prodplan | pgProdPlan | — | — | **BLOCKED_BY_GOVERNANCE** | No route | Map route or mark NOT_IN_SCOPE |
-| Planning | prodsummary | pgProdSummary | — | — | **BLOCKED_BY_GOVERNANCE** | No route | Map route or mark NOT_IN_SCOPE |
-| Planning | forecastdoc | pgForecastDoc | — | — | **BLOCKED_BY_GOVERNANCE** | No route | Forecast document workflow |
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Planning | demand | goliveDemandPlan | `/planning/demand` | `DemandPlanPage.jsx` | `demandPlanningService.js` | `007` `sc_so_pick_pack_candidate_view` | **COMPLETE** | Read-only L2A workbench |
+| Planning | atp | goliveAtpWorkbench | `/planning/atp` | `ATPWorkbenchPage.jsx` | `atpWorkbenchService.js` | `sc_web_atp_view` | **COMPLETE** | Supabase-backed ATP; safe mode |
+| Planning | shortage | goliveShortageReview | `/planning/shortage-review` | `ShortageReviewPage.jsx` | `demandPlanningService.js` | `sc_so_pick_pack_candidate_view` | **COMPLETE** | Shortage filter read-only |
+| Planning | planstock | pgPlanStock | `/planning/stock` | `StockPlanningPage.jsx` | `stockPlanningService.js` | `sc_web_stock_balance_view`, `sc_sales_forecasts` | **COMPLETE** | Legacy PS_CRITS, KPIs, table |
+| Planning | po | pgPO | `/planning/production-purchase` | `ProductionPurchaseSuggestionPage.jsx` | `productionPurchaseSuggestionService.js` | `007` request tables | **COMPLETE** | SUGGESTION ONLY — no PO/prod create |
+| Planning | planbook | pgPlanBooking | `/planning/reservation` | `ReservationWorkbenchPage.jsx` | `reservationSourceService.js` | `007` `sc_reservations` | **COMPLETE** | Safe mode; Supabase RPC request |
+| Planning | booksummary | pgBookingSummary | `/planning/reservation-summary` | `ReservationSummaryPage.jsx` | `reservationService.js` | `007` `sc_reservations` | **COMPLETE** | Read-only summary |
+| Planning | prodplan | pgProdPlan | — | — | — | — | **BLOCKED_BY_GOVERNANCE** | Live production order creation not in golive scope |
+| Planning | prodsummary | pgProdSummary | — | — | — | — | **BLOCKED_BY_GOVERNANCE** | Production compare workflow not migrated |
+| Planning | forecastdoc | pgForecastDoc | — | — | — | — | **BLOCKED_BY_GOVERNANCE** | Forecast document workflow not migrated |
+
+Production order / PO creation / stock posting: **BLOCKED_BY_GOVERNANCE** or **REQUEST_ONLY** (`sc_planning_*_requests` with `express_queue_status = blocked_by_governance`).
 
 ---
 
@@ -132,6 +139,16 @@ These exist in `index.html` but need explicit registry rows in future audits:
 
 ---
 
+## Newly implemented (Planning completion pass)
+
+- `supabase/migrations/007_planning_read_models.sql` — `sc_reservations`, `sc_inventory_balance_view`, `sc_so_pick_pack_candidate_view`, planning request tables
+- `src/services/planning/stockPlanningService.js` — legacy pgPlanStock benchmarks from read models + forecasts
+- `src/services/planning/atpWorkbenchService.js` — ATP from `sc_web_atp_view` with reservation deduction
+- `src/constants/stockPlanningLegacy.js` — `PS_CRITS_ALL` from legacy index.html
+- Rewrote `StockPlanningPage.jsx`, `ATPWorkbenchPage.jsx` (removed hardcoded demo rows)
+- Updated `scripts/audit/legacy-registry.js` — Demand, ATP, Shortage + service/migration/test patterns
+- `tests/unit/planning-module-completion.test.jsx`
+
 ## Newly implemented (Sales completion pass)
 
 - `supabase/migrations/006_sales_forecast_return_sample.sql`
@@ -177,8 +194,8 @@ npm run build
 
 ## Priority backlog (auto-implementation order)
 
-**A. Sales:** Sample & Consumable, Return/CN request workflow, Forecast migration/tests  
-**B. Planning:** StockPlanning real UI, prod plan/summary routes  
+**A. Sales:** ✅ Complete  
+**B. Planning:** ✅ Complete (routable entries); prod plan/summary/doc remain BLOCKED  
 **C. Warehouse:** WMS dashboard real UI, stock balance tests  
 **D. Consignment:** Replace OperationsPreviewPage shells with request workflows  
 **E. Master Data:** SKU settings, group admin  

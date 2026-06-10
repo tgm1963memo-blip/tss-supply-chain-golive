@@ -1,6 +1,6 @@
 # Legacy Function Coverage Check Result
 
-Generated: 2026-06-09T10:11:07.768Z
+Generated: 2026-06-10T03:02:10.491Z
 
 Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old project\tgm-supplychain\index.html`
 
@@ -9,9 +9,9 @@ Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old pr
 | Metric | Count |
 |--------|------:|
 | Legacy pg* functions in index.html | 24 |
-| Registry entries audited | 26 |
-| COMPLETE | 8 |
-| PARTIAL | 11 |
+| Registry entries audited | 29 |
+| COMPLETE | 15 |
+| PARTIAL | 7 |
 | MISSING | 0 |
 | BLOCKED_BY_GOVERNANCE | 7 |
 
@@ -33,10 +33,13 @@ _None — all critical handlers have route + page mapping._
 | Sales | promotions | promotions | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Sales | return_cn | return_cn | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Consignment | consi | pgConsignment | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
-| Planning | planstock | pgPlanStock | ✓ | ✗ | ✓ | ✓ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; No dedicated test coverage found |
-| Planning | po | pgPO | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
-| Planning | planbook | pgPlanBooking | ✓ | ✓ | ✓ | ✗ | ✓ | **PARTIAL** | Supabase migration/table/view missing |
-| Planning | booksummary | pgBookingSummary | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
+| Planning | demand | goliveDemandPlan | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | atp | goliveAtpWorkbench | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | shortage | goliveShortageReview | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | planstock | pgPlanStock | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | po | pgPO | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | planbook | pgPlanBooking | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Planning | booksummary | pgBookingSummary | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 |  | prodplan | pgProdPlan | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |
 |  | prodsummary | pgProdSummary | ✗ | ✗ | ✗ | ✓ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |
 |  | forecastdoc | pgForecastDoc | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | Forecast document workflow not migrated |
