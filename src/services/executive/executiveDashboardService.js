@@ -10,6 +10,10 @@ import { listSalesOrderReservationCandidates } from '../sales/reservationSourceS
 import { listPickListCandidates } from '../picking/pickListCandidateService.js';
 import { getPickingDocuments } from '../wms/pickingService.js';
 import { getDispatchDocuments } from '../wms/dispatchService.js';
+import { getExpressSyncStatus } from '../system/expressSyncStatusService.js';
+import { listForecasts } from '../sales/salesForecastService.js';
+import { getConsignmentDashboardData } from '../consignment/consignmentService.js';
+import { getWmsDashboardData } from '../warehouse/wmsDashboardService.js';
 
 export { isSupabaseConfigured };
 
@@ -172,5 +176,70 @@ export async function getManagementDashboardMetrics() {
       ['Total Available Qty', inventory?.totalAvailable ?? 0, 'Inventory balance view'],
       ['WMS Picking Docs', fulfillment?.pickingDocCount ?? 0, 'Read-only WMS list'],
     ],
+  };
+}
+
+function buildSeedExecutiveDashboard() {
+  return {
+    source: 'seed',
+    sync: {
+      configured: false,
+      lastSyncTime: null,
+      soHeadersSynced: null,
+      soLinesSynced: null,
+      stockRowsSynced: null,
+      failedRecords: null,
+      readOnlyModeActive: true,
+    },
+    sales: { soCount: 0, openCount: 0, reservedCount: 0, releasedCount: 0 },
+    stock: { totalOnHand: 0, totalAvailable: 0, totalReserved: 0, locations: 0 },
+    shortage: { shortStockLines: 0, readyToPickLines: 0 },
+    forecast: { forecastCount: 0, approvedCount: 0 },
+    consignment: { totalQty: 0, customerCount: 0, productCount: 0 },
+    wms: { skuCount: 0, totalQty: 0, lowStockSkus: 0 },
+    fulfillment: { pipeline: [] },
+  };
+}
+
+export async function getExecutiveDashboardData() {
+  if (!isSupabaseConfigured()) {
+    return buildSeedExecutiveDashboard();
+  }
+
+  const [
+    sync,
+    sales,
+    inventory,
+    shortagePack,
+    forecasts,
+    consignment,
+    wms,
+    fulfillment,
+  ] = await Promise.all([
+    getExpressSyncStatus(),
+    getSalesDashboardMetrics().catch(() => null),
+    getInventoryDashboardMetrics().catch(() => null),
+    getShortageOverviewMetrics().catch(() => ({ summary: {} })),
+    listForecasts().catch(() => []),
+    getConsignmentDashboardData({}).catch(() => ({ summary: {} })),
+    getWmsDashboardData().catch(() => ({ summary: {} })),
+    getFulfillmentPipelineMetrics().catch(() => ({ pipeline: [] })),
+  ]);
+
+  const forecastRows = Array.isArray(forecasts) ? forecasts : [];
+
+  return {
+    source: 'live',
+    sync,
+    sales: sales || { soCount: 0, openCount: 0, reservedCount: 0, releasedCount: 0 },
+    stock: inventory || { totalOnHand: 0, totalAvailable: 0, totalReserved: 0, locations: 0 },
+    shortage: shortagePack?.summary || { shortStockLines: 0, readyToPickLines: 0 },
+    forecast: {
+      forecastCount: forecastRows.length,
+      approvedCount: forecastRows.filter((f) => f.approved).length,
+    },
+    consignment: consignment?.summary || { totalQty: 0, customerCount: 0, productCount: 0 },
+    wms: wms?.summary || { skuCount: 0, totalQty: 0, lowStockSkus: 0 },
+    fulfillment,
   };
 }

@@ -7,200 +7,160 @@ import PageHeader from '../../components/scm-ui/PageHeader.jsx';
 import StatusBadge from '../../components/scm-ui/StatusBadge.jsx';
 import TablePanel from '../../components/scm-ui/TablePanel.jsx';
 import {
-  getManagementDashboardMetrics,
+  getExecutiveDashboardData,
   isSupabaseConfigured,
 } from '../../services/executive/executiveDashboardService.js';
 
-const operationCards = [
-  {
-    title: 'Sales Overview',
-    path: '/executive/sales-overview',
-    status: 'Live',
-    statusType: 'success',
-    body: 'SO lines, open/reserved/released counts, top customers and products.',
-  },
-  {
-    title: 'Reservation Workbench',
-    path: '/planning/reservation',
-    status: 'Live',
-    statusType: 'success',
-    body: 'SO candidates, fulfillment candidates, active reservations (safe mode).',
-  },
-  {
-    title: 'Picking & Packing',
-    path: '/warehouse/wms/picking-packing',
-    status: 'Read-only',
-    statusType: 'neutral',
-    body: 'WMS picking list, SO pick-pack candidates, confirm-pick preview.',
-  },
-  {
-    title: 'Stock Overview',
-    path: '/executive/stock-overview',
-    status: 'Live',
-    statusType: 'success',
-    body: 'On-hand, reserved, available totals and shortage signals.',
-  },
-  {
-    title: 'Shortage Overview',
-    path: '/executive/shortage-overview',
-    status: 'Live',
-    statusType: 'success',
-    body: 'Demand lines with shortage_qty from pick-pack candidate view.',
-  },
-  {
-    title: 'CONSI Overview',
-    path: '/executive/consi-overview',
-    status: 'Preview',
-    statusType: 'neutral',
-    body: 'Branch stock, sell-out, return, and CN adjust preview structure.',
-  },
-  {
-    title: 'Return / CN',
-    path: '/sales/return-cn',
-    status: 'Preview',
-    statusType: 'neutral',
-    body: 'Return intake, CN review queues, reason tracking.',
-  },
-  {
-    title: 'WMS Operations',
-    path: '/warehouse/wms',
-    status: 'Read-only',
-    statusType: 'neutral',
-    body: 'Receiving, putaway, transfer, picking, dispatch document lists.',
-  },
-  {
-    title: 'Order Fulfillment',
-    path: '/executive/order-fulfillment',
-    status: 'Live',
-    statusType: 'success',
-    body: 'SO → reservation → picking → dispatch pipeline (read-only).',
-  },
+const quickLinks = [
+  { title: 'Sales Overview', path: '/executive/sales-overview' },
+  { title: 'Stock Overview', path: '/executive/stock-overview' },
+  { title: 'Shortage Overview', path: '/executive/shortage-overview' },
+  { title: 'CONSI Dashboard', path: '/consignment' },
+  { title: 'WMS Dashboard', path: '/warehouse/wms' },
+  { title: 'Reports Center', path: '/admin/reports' },
+  { title: 'Sync Status', path: '/admin/sync-status' },
 ];
 
-function formatQty(value) {
-  return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+function fmt(v) {
+  return Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function formatSyncTime(value) {
+  if (!value) return '—';
+  return new Date(value).toLocaleString();
 }
 
 export default function ManagementDashboardPage() {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      if (!isSupabaseConfigured()) {
-        setMetrics(null);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await getManagementDashboardMetrics();
-        setMetrics(data);
-      } catch (err) {
-        setError(err);
-        setMetrics(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
+    getExecutiveDashboardData()
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
   }, []);
 
-  const kpis = metrics?.kpis || [
-    ['SO Lines', '—', 'Connect Supabase for live KPIs'],
-    ['Active Reservations', '—', 'Connect Supabase for live KPIs'],
-    ['Shortage Lines', '—', 'Connect Supabase for live KPIs'],
-    ['Ready to Pick', '—', 'Connect Supabase for live KPIs'],
-  ];
-
-  const pipelineRows = metrics?.fulfillment?.pipeline || [
-    { stage: 'SO Candidate', count: '—', status: 'draft', owner: 'Sales' },
-    { stage: 'Active Reservation', count: '—', status: 'draft', owner: 'Planning' },
-    { stage: 'Pick Candidate', count: '—', status: 'draft', owner: 'Picking' },
-  ];
+  const pipelineRows = data?.fulfillment?.pipeline || [];
 
   return (
-    <section className="tgm-page">
+    <section className="tgm-page space-y-5">
       <PageHeader
-        title="Management Dashboard"
-        description="Executive control tower migrated from SCM DashboardPage — read-only safe mode."
-        actions={<Badge type="neutral">Read-only</Badge>}
+        title="Executive Dashboard"
+        description="Legacy pgDash — read-only control tower across sales, stock, planning, CONSI, WMS, and sync."
+        actions={
+          <>
+            <Badge type="neutral">READ ONLY</Badge>
+            <Badge type="warning">SAFE MODE</Badge>
+          </>
+        }
       />
 
       <Alert variant="warning">
-        Read-only executive dashboard. No confirm pick, dispatch, goods issue, stock deduction, ledger posting, or Express/DBF write-back.
+        Executive dashboard is read-only. No stock posting, SO/CN creation, dispatch, or Express write-back from this page.
       </Alert>
 
-      {!isSupabaseConfigured() && (
-        <Alert variant="warning">
-          Supabase not configured — live KPIs unavailable. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
-        </Alert>
-      )}
+      {!isSupabaseConfigured() ? (
+        <Alert variant="info">Supabase not configured — showing seed/empty KPI structure.</Alert>
+      ) : null}
+      {data?.source === 'seed' ? (
+        <Alert variant="info">Live Supabase data unavailable — KPI sections show safe defaults.</Alert>
+      ) : null}
+      {loading ? <Alert variant="info">Loading executive dashboard...</Alert> : null}
+      {error ? <Alert variant="danger">{error.message || String(error)}</Alert> : null}
 
-      {loading && <Alert variant="info">Loading live metrics from Supabase views...</Alert>}
-      {error ? <Alert variant="danger">{error.message}</Alert> : null}
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {kpis.slice(0, 4).map(([label, value, detail]) => (
-          <KpiCard
-            key={label}
-            label={label}
-            value={typeof value === 'number' ? formatQty(value) : value}
-            detail={detail}
-          />
-        ))}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">System Sync</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
+          <KpiCard label="Last Express Sync" value={formatSyncTime(data?.sync?.lastSyncTime)} />
+          <KpiCard label="SO Headers" value={fmt(data?.sync?.soHeadersSynced)} />
+          <KpiCard label="SO Lines" value={fmt(data?.sync?.soLinesSynced)} />
+          <KpiCard label="Stock Rows" value={fmt(data?.sync?.stockRowsSynced)} />
+          <KpiCard label="Products Synced" value={fmt(data?.sync?.productsSynced)} />
+          <KpiCard label="Failed Records" value={fmt(data?.sync?.failedRecords)} />
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {operationCards.map((card) => (
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Sales</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <KpiCard label="SO Lines" value={fmt(data?.sales?.soCount)} />
+          <KpiCard label="Open (Not Reserved)" value={fmt(data?.sales?.openCount)} />
+          <KpiCard label="Reserved" value={fmt(data?.sales?.reservedCount)} />
+          <KpiCard label="Released" value={fmt(data?.sales?.releasedCount)} />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Stock & Shortage</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
+          <KpiCard label="Total On Hand" value={fmt(data?.stock?.totalOnHand)} />
+          <KpiCard label="Available" value={fmt(data?.stock?.totalAvailable)} />
+          <KpiCard label="Reserved" value={fmt(data?.stock?.totalReserved)} />
+          <KpiCard label="Balance Lines" value={fmt(data?.stock?.locations)} />
+          <KpiCard label="Shortage Lines" value={fmt(data?.shortage?.shortStockLines)} />
+          <KpiCard label="Ready to Pick" value={fmt(data?.shortage?.readyToPickLines)} />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Forecast, CONSI & WMS</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <KpiCard label="Forecast Entries" value={fmt(data?.forecast?.forecastCount)} />
+          <KpiCard label="Approved Forecasts" value={fmt(data?.forecast?.approvedCount)} />
+          <KpiCard label="CONSI Qty (kg)" value={fmt(data?.consignment?.totalQty)} />
+          <KpiCard label="CONSI Customers" value={fmt(data?.consignment?.customerCount)} />
+          <KpiCard label="WMS SKUs" value={fmt(data?.wms?.skuCount)} />
+          <KpiCard label="WMS Low Stock" value={fmt(data?.wms?.lowStockSkus)} />
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {quickLinks.map((link) => (
           <Link
-            key={card.title}
-            className="tgm-card-padded group transition hover:border-[var(--color-primary)]/40 hover:shadow-md"
-            to={card.path}
+            key={link.path}
+            to={link.path}
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)] transition hover:border-brand-400"
           >
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-base font-semibold text-[var(--color-text-main)] group-hover:text-[var(--color-primary-hover)]">
-                {card.title}
-              </h2>
-              <Badge type={card.statusType}>{card.status}</Badge>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">{card.body}</p>
+            <div className="font-medium">{link.title}</div>
           </Link>
         ))}
       </div>
 
       <TablePanel title="Order Fulfillment Pipeline (Read-only)">
-        <table className="tgm-table">
-          <thead>
-            <tr>
-              <th>Stage</th>
-              <th className="text-right">Count</th>
-              <th>Status</th>
-              <th>Owner</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pipelineRows.map((row) => (
-              <tr key={row.stage}>
-                <td className="font-semibold text-[var(--color-text-main)]">{row.stage}</td>
-                <td className="text-right tabular-nums text-[var(--color-text-muted)]">
-                  {typeof row.count === 'number' ? formatQty(row.count) : row.count}
-                </td>
-                <td>
-                  <StatusBadge
-                    status={row.status}
-                    label={String(row.status).charAt(0).toUpperCase() + String(row.status).slice(1)}
-                  />
-                </td>
-                <td className="text-[var(--color-text-muted)]">{row.owner}</td>
+        <div className="overflow-x-auto">
+          <table className="tgm-table whitespace-nowrap min-w-max">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th className="text-right">Count</th>
+                <th>Status</th>
+                <th>Owner</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pipelineRows.map((row) => (
+                <tr key={row.stage}>
+                  <td className="font-semibold">{row.stage}</td>
+                  <td className="text-right tabular-nums">{fmt(row.count)}</td>
+                  <td>
+                    <StatusBadge
+                      status={row.status}
+                      label={String(row.status).charAt(0).toUpperCase() + String(row.status).slice(1)}
+                    />
+                  </td>
+                  <td>{row.owner}</td>
+                </tr>
+              ))}
+              {!loading && pipelineRows.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-[var(--color-text-muted)]">No pipeline data.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </TablePanel>
     </section>
   );

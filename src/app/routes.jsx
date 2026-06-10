@@ -77,6 +77,7 @@ import RoomCompanyPage from '../features/master-data/RoomCompanyPage.jsx';
 
 // Admin
 import SystemControlPage from '../features/admin/SystemControlPage.jsx';
+import AdminReportsPage from '../features/admin/AdminReportsPage.jsx';
 import ExpressSyncStatusPage from '../features/admin/ExpressSyncStatusPage.jsx';
 import DataSyncMonitorPage from '../features/admin/DataSyncMonitorPage.jsx';
 import ReadModelRefreshPage from '../features/admin/ReadModelRefreshPage.jsx';
@@ -212,9 +213,10 @@ export default function AppRoutes() {
           <Route path="*" element={<Navigate to="/sales/sample-consumable" replace />} />
         </Route>
         <Route path="reports">
-          <Route path="*" element={<Navigate to="/executive/management" replace />} />
+          <Route index element={<Navigate to="/admin/reports" replace />} />
         </Route>
         <Route path="admin">
+          <Route path="reports" element={<AdminReportsPage />} />
           <Route path="system-control" element={<SystemControlPage />} />
           <Route path="sync-status" element={<ExpressSyncStatusPage />} />
           <Route path="data-sync-monitor" element={<DataSyncMonitorPage />} />

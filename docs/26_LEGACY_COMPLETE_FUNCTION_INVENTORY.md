@@ -10,17 +10,15 @@
 | Metric | Count |
 |--------|------:|
 | Legacy `pg*` functions in index.html | 24 |
-| Registry entries | 26 |
-| **COMPLETE** | 15 |
-| **PARTIAL** | 7 |
+| Registry entries | 47 |
+| **COMPLETE** | 40 |
+| **PARTIAL** | 0 |
 | **MISSING** | 0 |
 | **BLOCKED_BY_GOVERNANCE** | 7 |
 
-**Sales module:** all 8 registry entries **COMPLETE** (0 PARTIAL)
+**All routable legacy functions:** COMPLETE or BLOCKED_BY_GOVERNANCE — **0 PARTIAL**
 
-**Planning module:** all 7 routable registry entries **COMPLETE** (0 PARTIAL). Legacy `pgProdPlan`, `pgProdSummary`, `pgForecastDoc` remain **BLOCKED_BY_GOVERNANCE**.
-
-**COMPLETE (global):** Sales (8), Planning (7) — see audit MD for full list
+**Modules COMPLETE:** Sales (8), Planning (7), Warehouse (15), Consignment (7), Executive (1), Master Data SKU Admin (1), Admin Reports (1)
 
 **Critical handlers with route + page:** all 12 critical handlers mapped (0 MISSING)
 
@@ -131,23 +129,31 @@ Express consignment SO/CN/stock write-back: **BLOCKED_BY_GOVERNANCE** — all wr
 
 ---
 
+## Executive dashboard
+
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Executive | dash | pgDash | `/executive/management` | `ManagementDashboardPage.jsx` | `executiveDashboardService.js` | `sync_jobs`, `sc_web_*` | **COMPLETE** | Sales/stock/shortage/forecast/CONSI/WMS/sync KPIs |
+
+---
+
 ## Master data
 
-| Module | Menu key | Handler | Route | Page | Status | Gap |
-|--------|----------|---------|-------|------|--------|-----|
-| Master Data | skuadmin | pgSKUAdmin | `/master-data/sku-settings` | `SKUSettingsPage.jsx` | **PARTIAL** | OperationsPreviewPage shell |
-| Master Data | groups | pgGroupAdmin | — | — | **BLOCKED_BY_GOVERNANCE** | Group admin not migrated |
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Master Data | skuadmin | pgSKUAdmin | `/master-data/sku-settings` | `SKUSettingsPage.jsx` | `skuAdminService.js` | `010` `sc_web_sku_admin_view` | **COMPLETE** | Read STMAS; setting changes REQUEST_ONLY |
+| Master Data | groups | pgGroupAdmin | — | — | — | — | **BLOCKED_BY_GOVERNANCE** | Group admin not migrated |
 
 ---
 
 ## System / admin
 
-| Module | Menu key | Handler | Route | Page | Status | Gap |
-|--------|----------|---------|-------|------|--------|-----|
-| Admin | reports | pgReports | `/executive/management` | `ManagementDashboardPage.jsx` | **PARTIAL** | Reports merged into dashboard |
-| Admin | users | pgUsers | — | `UserPage.jsx` (unwired) | **BLOCKED_BY_GOVERNANCE** | Auth module not in scope |
-| Admin | perms | pgPerms | — | `RolePermissionPage.jsx` (unwired) | **BLOCKED_BY_GOVERNANCE** | Auth module not in scope |
-| Admin | auditlog | pgAudit | — | `AuditLogPage.jsx` (unwired) | **BLOCKED_BY_GOVERNANCE** | Route not in navigation |
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Admin | reports | pgReports | `/admin/reports` | `AdminReportsPage.jsx` | `adminReportsService.js` | `sync_jobs`, `sc_web_*` | **COMPLETE** | Report center + safe CSV export |
+| Admin | users | pgUsers | — | `UserPage.jsx` (unwired) | — | — | **BLOCKED_BY_GOVERNANCE** | Auth module not in scope |
+| Admin | perms | pgPerms | — | `RolePermissionPage.jsx` (unwired) | — | — | **BLOCKED_BY_GOVERNANCE** | Auth module not in scope |
+| Admin | auditlog | pgAudit | — | `AuditLogPage.jsx` (unwired) | — | — | **BLOCKED_BY_GOVERNANCE** | Route not in navigation |
 
 ---
 
@@ -158,6 +164,17 @@ These exist in `index.html` but need explicit registry rows in future audits:
 - `pgCrWorkflowSettings` — customer registration approver settings
 
 ---
+
+## Newly implemented (Final legacy completion pass)
+
+- `supabase/migrations/010_sku_admin_read_models.sql` — `sc_web_sku_admin_view`, `sc_sku_setting_requests`
+- `src/services/executive/executiveDashboardService.js` — expanded `getExecutiveDashboardData()` (sync, sales, stock, shortage, forecast, CONSI, WMS)
+- `src/services/master-data/skuAdminService.js` — SKU master read + setting change requests
+- `src/services/admin/adminReportsService.js` — report definitions, previews, safe CSV export
+- Rewrote `ManagementDashboardPage.jsx`, `SKUSettingsPage.jsx`; added `AdminReportsPage.jsx`
+- Route `/admin/reports`; navigation Reports & Export link
+- Updated `scripts/audit/legacy-registry.js` — pgDash, pgSKUAdmin, pgReports
+- `tests/unit/final-legacy-completion.test.jsx`
 
 ## Newly implemented (Consignment completion pass)
 
@@ -245,7 +262,7 @@ npm run build
 **B. Planning:** ✅ Complete (routable entries); prod plan/summary/doc remain BLOCKED  
 **C. Warehouse:** ✅ Complete (15/15 routable entries); all posting actions REQUEST_ONLY / SAFE MODE  
 **D. Consignment:** ✅ Complete (7/7 routable entries); SO/CN/stock posting BLOCKED_BY_GOVERNANCE  
-**E. Master Data:** SKU settings, group admin  
-**F. Admin:** Wire user/perm/audit routes when auth module approved
+**E. Executive / Master Data / Admin Reports:** ✅ Complete — pgDash, pgSKUAdmin, pgReports  
+**F. Remaining BLOCKED:** pgGroupAdmin, pgUsers, pgPerms, pgAudit, pgProdPlan, pgProdSummary, pgForecastDoc
 
 Regenerate this inventory after each audit: `npm run legacy:audit`

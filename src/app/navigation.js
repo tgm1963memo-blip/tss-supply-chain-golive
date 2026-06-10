@@ -112,6 +112,7 @@ export const navigationGroups = [
     icon: Settings,
     items: [
       { label: 'System Control', path: '/admin/system-control' },
+      { label: 'Reports & Export', path: '/admin/reports' },
       { label: 'Express Sync Status', path: '/admin/sync-status' },
       { label: 'Data Sync Monitor', path: '/admin/data-sync-monitor' },
       { label: 'Read Model Refresh', path: '/admin/read-model-refresh' },
