@@ -1,6 +1,6 @@
 # Legacy Function Coverage Check Result
 
-Generated: 2026-06-09T09:56:48.255Z
+Generated: 2026-06-09T10:11:07.768Z
 
 Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old project\tgm-supplychain\index.html`
 
@@ -10,8 +10,8 @@ Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old pr
 |--------|------:|
 | Legacy pg* functions in index.html | 24 |
 | Registry entries audited | 26 |
-| COMPLETE | 3 |
-| PARTIAL | 16 |
+| COMPLETE | 8 |
+| PARTIAL | 11 |
 | MISSING | 0 |
 | BLOCKED_BY_GOVERNANCE | 7 |
 
@@ -25,17 +25,17 @@ _None — all critical handlers have route + page mapping._
 |--------|------|---------|-------|------|---------|-----------|-------|--------|-----|
 | Executive | dash | pgDash | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
 | Sales | mysales | pgMySales | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
-| Sales | forecast | pgForecast | ✓ | ✓ | ✓ | ✗ | ✗ | **PARTIAL** | Supabase migration/table/view missing; No dedicated test coverage found |
-| Sales | custmap | pgCustMap | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
+| Sales | forecast | pgForecast | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Sales | custmap | pgCustMap | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Sales | custreg | pgCustReg | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
-| Sales | sample | pgSample | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
-| Sales | sales_order | pgPlanBooking | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
+| Sales | sample | pgSample | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Sales | sales_order | pgPlanBooking | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Sales | promotions | promotions | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
-| Sales | return_cn | return_cn | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
+| Sales | return_cn | return_cn | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Consignment | consi | pgConsignment | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
 | Planning | planstock | pgPlanStock | ✓ | ✗ | ✓ | ✓ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; No dedicated test coverage found |
 | Planning | po | pgPO | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
-| Planning | planbook | pgPlanBooking | ✓ | ✓ | ✓ | ✗ | ✗ | **PARTIAL** | Supabase migration/table/view missing; No dedicated test coverage found |
+| Planning | planbook | pgPlanBooking | ✓ | ✓ | ✓ | ✗ | ✓ | **PARTIAL** | Supabase migration/table/view missing |
 | Planning | booksummary | pgBookingSummary | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
 |  | prodplan | pgProdPlan | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |
 |  | prodsummary | pgProdSummary | ✗ | ✗ | ✗ | ✓ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |

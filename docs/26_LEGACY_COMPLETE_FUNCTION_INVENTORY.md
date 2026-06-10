@@ -11,12 +11,14 @@
 |--------|------:|
 | Legacy `pg*` functions in index.html | 24 |
 | Registry entries | 26 |
-| **COMPLETE** | 2 |
-| **PARTIAL** | 17 |
+| **COMPLETE** | 8 |
+| **PARTIAL** | 11 |
 | **MISSING** | 0 |
 | **BLOCKED_BY_GOVERNANCE** | 7 |
 
-**COMPLETE:** `pgMySales`, `pgCustReg` (+ all custreg workflow sub-functions)
+**Sales module:** all 8 registry entries **COMPLETE** (0 PARTIAL)
+
+**COMPLETE (global):** `pgMySales`, `pgForecast`, `pgCustMap`, `pgCustReg`, `pgSample`, Sales Order, Promotions, Return/CN
 
 **Critical handlers with route + page:** all 12 critical handlers mapped (0 MISSING)
 
@@ -43,13 +45,13 @@ A function is **COMPLETE** only when all of:
 | Module | Menu key | Legacy label | Handler | Sub-functions | Legacy fields (summary) | Route | Page | Service | Migration | Test | Status | Evidence | Gap | Required action |
 |--------|----------|--------------|---------|---------------|---------------------------|-------|------|---------|-----------|------|--------|----------|-----|-----------------|
 | Sales | mysales | Sales Overview | pgMySales | — | Filters, KPIs, charts, detail table | `/sales/overview` | `SalesOverviewPage.jsx` | `salesOverviewService.js` | `sc_web_sales_dashboard_view`, `sc_express_invoices` | `sales-legacy-functions.test.jsx` | **COMPLETE** | Real UI, read-only, tests | None | — |
-| Sales | forecast | Sales Forecast | pgForecast | — | Forecast entry, periods, product groups | `/sales/forecast` | `SalesForecastPage.jsx` | `src/services/sales/*` | localStorage only | — | **PARTIAL** | Real UI | No Supabase migration; no tests | Add forecast migration + tests |
-| Sales | custmap | Customer Map | pgCustMap | — | Customer sales summary, map/table | `/sales/customer-map` | `CustomerMapPage.jsx` | `customerMapService.js` | `sc_express_customers` | — | **PARTIAL** | Real UI, read model | No dedicated tests | Add customer-map tests |
-| Sales | custreg | Customer Registration | pgCustReg | `_crSave`, `crConfirmApproval`, `CR_DOC_SLOTS`, `custreg_subs` | New/Edit/Branch/Credit/Suspend, snapshot, proposed changes, doc slots, approval | `/sales/customer-registration` | `CustomerRegistrationPage.jsx` | `customerRegistrationService.js` | `004`, `005` | `sales-legacy-functions.test.jsx` | **COMPLETE** | Full workflow, CR_DOC_SLOTS, metadata attachments | Re-run migration 005 in Supabase | — |
-| Sales | sample | Sample & Consumable | pgSample | — | Issue request, consumable tracking | `/sales/sample-consumable` | `SampleConsumablePage.jsx` | — | — | — | **PARTIAL** | OperationsPreviewPage shell | No service/migration/tests | Implement real page + Supabase request table |
-| Sales | — | Sales Order | pgPlanBooking (SO list) | — | SO list, detail, reservation | `/sales/orders` | `SalesOrderListPage.jsx` | `reservationSourceService.js` | `sc_so_reservation`, `sc_express_so` | — | **PARTIAL** | Real UI | No dedicated tests | Add SO tests |
-| Sales | promotions | Promotion | — | — | Promotion requests | `/sales/promotions` | `SalesPromotionsPage.jsx` | `promotionService.js` | `003` (pattern mismatch in audit) | `sales-promotions-safety.test.jsx` | **PARTIAL** | Real UI, tests | Audit migration pattern | Fix audit pattern only |
-| Sales | — | Return / CN | — | — | CN return workflow | `/sales/return-cn` | `ReturnCNPage.jsx` | — | — | — | **PARTIAL** | OperationsPreviewPage shell | No live CN post to Express | Supabase CN request workflow |
+| Sales | forecast | Sales Forecast | pgForecast | Grid/summary/entry/list/doc tabs, templates | `/sales/forecast` | `SalesForecastPage.jsx` | `salesForecastService.js` | `006` `sc_sales_forecasts` | `sales-module-completion.test.jsx` | **COMPLETE** | Supabase + local fallback | Run migration 006 | — |
+| Sales | custmap | Customer Map | pgCustMap (= pgMySales) | Customer sales summary by code/group | `/sales/customer-map` | `CustomerMapPage.jsx` | `customerMapService.js` | read models | `sales-module-completion.test.jsx` | **COMPLETE** | No map placeholder | — | — |
+| Sales | custreg | Customer Registration | pgCustReg | (see sub-functions) | `/sales/customer-registration` | `CustomerRegistrationPage.jsx` | `customerRegistrationService.js` | `004`, `005` | `sales-legacy-functions.test.jsx` | **COMPLETE** | Full workflow | Re-run 004/005 if needed | — |
+| Sales | sample | Sample & Consumable | pgSample | List KPIs, form, items, approval/dispatch | `/sales/sample-consumable` | `SampleConsumablePage.jsx` | `sampleConsumableService.js` | `006` `sc_sample_consumable_*` | `sales-module-completion.test.jsx` | **COMPLETE** | Request-only, no GI | Run migration 006 | — |
+| Sales | — | Sales Order | pgPlanBooking | SO list, reservation candidates | `/sales/orders` | `SalesOrderListPage.jsx` | `reservationSourceService.js` | read models | `sales-module-completion.test.jsx` | **COMPLETE** | Read-only safe mode | — | — |
+| Sales | promotions | Promotion | — | Full promotion workflow | `/sales/promotions` | `SalesPromotionsPage.jsx` | `promotionService.js` | `003` | `sales-promotions-safety.test.jsx` | **COMPLETE** | — | — | — |
+| Sales | — | Return / CN | — | CN/return request, lines, approval | `/sales/return-cn` | `ReturnCNPage.jsx` | `returnCnService.js` | `006` `sc_return_cn_*` | `sales-module-completion.test.jsx` | **COMPLETE** | express_queue blocked | Run migration 006 | — |
 
 ### Customer Registration sub-functions (pgCustReg)
 
@@ -130,7 +132,18 @@ These exist in `index.html` but need explicit registry rows in future audits:
 
 ---
 
-## Newly implemented (this session)
+## Newly implemented (Sales completion pass)
+
+- `supabase/migrations/006_sales_forecast_return_sample.sql`
+- `src/services/sales/salesForecastService.js` — Supabase + localStorage fallback
+- `src/services/sales/returnCnService.js` — full CN/return request workflow
+- `src/services/sales/sampleConsumableService.js` — legacy pgSample workflow
+- `src/services/customerMap/customerMapService.js` — pgCustMap = pgMySales sales summary
+- Rewrote `CustomerMapPage.jsx`, `ReturnCNPage.jsx`, `SampleConsumablePage.jsx`
+- Updated `SalesForecastPage.jsx` — Supabase service integration
+- `tests/unit/sales-module-completion.test.jsx`
+
+## Newly implemented (prior session)
 
 - `scripts/audit/legacy_function_coverage_check.js` + `legacy-registry.js`
 - `npm run legacy:audit`

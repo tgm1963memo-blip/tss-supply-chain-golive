@@ -12,10 +12,17 @@ import {
 } from './forecast/forecastUtils.js';
 import {
   genForecastId,
-  loadForecasts,
-  replaceForecastsForMonth,
-  saveForecasts,
 } from './forecast/forecastStorage.js';
+import {
+  appendForecasts,
+  copyForecastsFromMonth,
+  listForecasts,
+  mergeForecastsForMonth,
+  replaceForecastsForMonth,
+} from '../../services/sales/salesForecastService.js';
+import Alert from '../../components/scm-ui/Alert.jsx';
+import Badge from '../../components/scm-ui/Badge.jsx';
+import PageHeader from '../../components/scm-ui/PageHeader.jsx';
 import {
   DEFAULT_GRID_SKUS,
   LEGACY_CUSTOMERS,
@@ -613,7 +620,7 @@ export default function SalesForecastPage() {
   const prevStateKeyRef = useRef('');
 
   useEffect(() => {
-    setForecasts(loadForecasts());
+    listForecasts().then(setForecasts).catch(() => setForecasts([]));
   }, []);
 
   useEffect(() => {
@@ -648,7 +655,7 @@ export default function SalesForecastPage() {
     setGridSkusByKey((prev) => ({ ...prev, [stateKey]: skus }));
   };
 
-  const saveGrid = () => {
+  const saveGrid = async () => {
     const rows = [];
     gridSkus.forEach((skuCode) => {
       cols.forEach((c, i) => {
@@ -671,48 +678,28 @@ export default function SalesForecastPage() {
       showToast('กรุณากรอกจำนวนอย่างน้อย 1 รายการ', 'warn');
       return;
     }
-    const count = replaceForecastsForMonth(selMonth, selCust, rows);
-    setForecasts(loadForecasts());
-    showToast(`บันทึกแผน ${count} รายการแล้ว (localStorage)`);
+    try {
+      const count = await replaceForecastsForMonth(selMonth, selCust, rows);
+      setForecasts(await listForecasts());
+      showToast(`บันทึกแผน ${count} รายการแล้ว (Supabase / local fallback)`);
+    } catch (err) {
+      showToast(err.message || 'Save failed', 'warn');
+    }
   };
 
-  const copyLastMonth = () => {
+  const copyLastMonth = async () => {
     const prevYm = prevMonthYm(selMonth);
-    if (
-      !window.confirm(
-        `คัดลอก Forecast จากเดือน ${prevYm} มายัง ${selMonth}?\n(จะข้ามรายการที่มีอยู่แล้วในเดือนนี้)`,
-      )
-    ) {
-      return;
+    try {
+      const count = await copyForecastsFromMonth(prevYm, selMonth, selCust || '');
+      if (!count) {
+        showToast(`ไม่มีข้อมูลให้ copy จาก ${prevYm}`, 'warn');
+        return;
+      }
+      setForecasts(await listForecasts());
+      showToast(`📋 Copy สำเร็จ ${count} รายการ`);
+    } catch (err) {
+      showToast(err.message || 'Copy failed', 'warn');
     }
-    const allFc = loadForecasts();
-    const prevFc = allFc.filter((f) => (f.delivDate || '').startsWith(prevYm));
-    const thisFc = allFc.filter((f) => (f.delivDate || '').slice(0, 7) === selMonth);
-    const existKeys = new Set(thisFc.map((f) => `${f.sku}|${f.custCode || ''}`));
-
-    if (!prevFc.length) {
-      showToast(`ไม่มีข้อมูล Forecast ในเดือน ${prevYm}`, 'warn');
-      return;
-    }
-
-    const copies = prevFc
-      .filter((f) => !existKeys.has(`${f.sku}|${f.custCode || ''}`))
-      .map((f) => ({
-        ...f,
-        id: genForecastId(),
-        delivDate: f.delivDate ? f.delivDate.replace(prevYm, selMonth) : null,
-        approved: false,
-        note: `[Copy จาก ${prevYm}] ${f.note || ''}`.trim(),
-      }));
-
-    if (!copies.length) {
-      showToast(`ทุก SKU มีข้อมูลเดือน ${selMonth} แล้ว — ไม่มีอะไรต้อง copy`, 'warn');
-      return;
-    }
-
-    saveForecasts([...allFc, ...copies]);
-    setForecasts(loadForecasts());
-    showToast(`📋 Copy สำเร็จ ${copies.length} รายการ`);
   };
 
   const exportAll = () => {
@@ -728,17 +715,13 @@ export default function SalesForecastPage() {
     );
   };
 
-  const saveEntryRows = (newRows) => {
-    const all = loadForecasts();
-    const filtered = all.filter(
-      (f) =>
-        !(
-          (f.delivDate || '').slice(0, 7) === selMonth &&
-          (!selCust || f.custCode === selCust)
-        ),
-    );
-    saveForecasts([...filtered, ...newRows]);
-    setForecasts(loadForecasts());
+  const saveEntryRows = async (newRows) => {
+    try {
+      await mergeForecastsForMonth(selMonth, selCust, newRows);
+      setForecasts(await listForecasts());
+    } catch (err) {
+      showToast(err.message || 'Import failed', 'warn');
+    }
   };
 
   const tabBtnStyle = (id) =>
@@ -748,8 +731,19 @@ export default function SalesForecastPage() {
 
   return (
     <section className="legacy-forecast tgm-page">
-      <h1 className="fc-page-title">Sales Forecast</h1>
-
+      <PageHeader
+        title="Sales Forecast / แผนยอดขาย"
+        description="Legacy pgForecast — Supabase sc_sales_forecasts (local fallback when offline)."
+        actions={
+          <>
+            <Badge type="info">DATA ENTRY</Badge>
+            <Badge type="warning">SAFE MODE</Badge>
+          </>
+        }
+      />
+      <Alert variant="warning" className="mb-3">
+        Forecast data is stored in Supabase only. No Express SO creation or stock reservation from this page.
+      </Alert>
       {toast && (
         <div
           className="fc-toast"
