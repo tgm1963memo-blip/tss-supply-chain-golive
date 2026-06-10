@@ -117,11 +117,17 @@ Stock adjustment, receiving confirmation, goods issue, pick confirm, and WMS pos
 
 ## Consignment / modern trade
 
-| Module | Menu key | Handler | Route | Page | Status | Gap |
-|--------|----------|---------|-------|------|--------|-----|
-| Consignment | consi | pgConsignment | `/consignment` | `ConsignmentDashboardPage.jsx` | **PARTIAL** | OperationsPreviewPage shell — all CONSI sub-pages preview-only |
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Consignment | consi | pgConsignment | `/consignment` | `ConsignmentDashboardPage.jsx` | `consignmentService.js` | `009` sales summary view | **COMPLETE** | Legacy pgConsignment KPIs + grouped table |
+| Consignment | consi_so | goliveConsignmentSo | `/consignment/so` | `ConsignmentSOPage.jsx` | `consignmentService.js` | `sc_consi_so_requests` | **COMPLETE** | SO read + REQUEST_ONLY |
+| Consignment | branch_stock | goliveBranchStock | `/consignment/branch-stock` | `BranchStockPage.jsx` | `branchStockService.js` | `sc_web_consi_branch_stock_view` | **COMPLETE** | Branch stock from SO lines |
+| Consignment | consi_movement | goliveConsignmentMovement | `/consignment/movement` | `ConsignmentMovementPage.jsx` | `consignmentMovementService.js` | `sc_consi_movement_requests` | **COMPLETE** | Temp DN workbench |
+| Consignment | sell_out | goliveSellOut | `/consignment/sell-out` | `SellOutRecordPage.jsx` | `sellOutService.js` | `sc_consi_sell_out_requests` | **COMPLETE** | Sell-out REQUEST_ONLY |
+| Consignment | return_branch | goliveReturnFromBranch | `/consignment/return-from-branch` | `ReturnFromBranchPage.jsx` | `consignmentReturnCnService.js` | `sc_consi_return_branch_requests` | **COMPLETE** | Return REQUEST_ONLY |
+| Consignment | return_cn | goliveConsignmentReturnCn | `/consignment/return-cn` | `ConsignmentReturnCNPage.jsx` | `consignmentReturnCnService.js` | `sc_consi_return_cn_requests` | **COMPLETE** | CONSI CN REQUEST_ONLY |
 
-Express consignment write-back (stock moves, CN): **BLOCKED_BY_GOVERNANCE** — request workflow required.
+Express consignment SO/CN/stock write-back: **BLOCKED_BY_GOVERNANCE** — all write actions use Supabase request tables with `express_queue_status = blocked_by_governance`.
 
 ---
 
@@ -152,6 +158,19 @@ These exist in `index.html` but need explicit registry rows in future audits:
 - `pgCrWorkflowSettings` — customer registration approver settings
 
 ---
+
+## Newly implemented (Consignment completion pass)
+
+- `supabase/migrations/009_consignment_modern_trade.sql` — CONSI read views + request tables
+- `src/constants/consignmentLegacy.js` — legacy pgConsignment constants
+- `src/services/consignment/consignmentService.js` — dashboard + SO requests
+- `src/services/consignment/branchStockService.js` — `sc_web_consi_branch_stock_view`
+- `src/services/consignment/consignmentMovementService.js` — movement read + temp DN requests
+- `src/services/consignment/sellOutService.js` — sell-out requests
+- `src/services/consignment/consignmentReturnCnService.js` — return branch + CONSI CN requests
+- Rewrote all 7 consignment pages (removed OperationsPreviewPage shells)
+- Updated `scripts/audit/legacy-registry.js` — 7 Consignment entries
+- `tests/unit/consignment-module-completion.test.jsx`
 
 ## Newly implemented (Warehouse completion pass)
 
@@ -225,7 +244,7 @@ npm run build
 **A. Sales:** ✅ Complete  
 **B. Planning:** ✅ Complete (routable entries); prod plan/summary/doc remain BLOCKED  
 **C. Warehouse:** ✅ Complete (15/15 routable entries); all posting actions REQUEST_ONLY / SAFE MODE  
-**D. Consignment:** Replace OperationsPreviewPage shells with request workflows  
+**D. Consignment:** ✅ Complete (7/7 routable entries); SO/CN/stock posting BLOCKED_BY_GOVERNANCE  
 **E. Master Data:** SKU settings, group admin  
 **F. Admin:** Wire user/perm/audit routes when auth module approved
 

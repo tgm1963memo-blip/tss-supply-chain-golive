@@ -1,17 +1,48 @@
-import React, { useState } from 'react';
-import PageHeader from '../../components/scm-ui/PageHeader.jsx';
-import Badge from '../../components/scm-ui/Badge.jsx';
+import { useEffect, useState } from 'react';
 import Alert from '../../components/scm-ui/Alert.jsx';
+import Badge from '../../components/scm-ui/Badge.jsx';
+import { KpiCard } from '../../components/scm-ui/Card.jsx';
+import PageHeader from '../../components/scm-ui/PageHeader.jsx';
 import TablePanel from '../../components/scm-ui/TablePanel.jsx';
+import { getBranchStockPageData } from '../../services/consignment/branchStockService.js';
+
+function fmt(v) {
+  return Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function statusBadge(status) {
+  if (status === 'low') return <Badge type="danger">Low Stock</Badge>;
+  if (status === 'empty') return <Badge type="neutral">Empty</Badge>;
+  return <Badge type="success">Normal</Badge>;
+}
 
 export default function BranchStockPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [branchCode, setBranchCode] = useState('');
+  const [search, setSearch] = useState('');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  function load(nextBranch = branchCode, nextSearch = search) {
+    setLoading(true);
+    getBranchStockPageData({ branchCode: nextBranch || undefined, search: nextSearch || undefined })
+      .then(setData)
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    load('', '');
+  }, []);
+
+  function handleFilterSubmit(event) {
+    event.preventDefault();
+    load(branchCode, search);
+  }
 
   return (
-    <section className="tgm-page space-y-4">
+    <section className="tgm-page space-y-5">
       <PageHeader
         title="Consignment Branch Stock"
-        description="Monitor inventory levels at consignment branches and modern trade locations."
+        description="Branch inventory from sc_web_consi_branch_stock_view / Express SO lines."
         actions={
           <>
             <Badge type="neutral">READ ONLY</Badge>
@@ -19,50 +50,51 @@ export default function BranchStockPage() {
           </>
         }
       />
+
       <Alert variant="warning">
-        This module operates in Safe Mode. View current branch stock levels only. Branch stock adjustments and transfers back to Express are disabled.
+        Branch stock is read-only. Adjustments, transfers, and Express write-back remain BLOCKED_BY_GOVERNANCE.
       </Alert>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4 border-l-4 border-l-blue-500">
-          <div className="text-xs text-gray-500 uppercase font-semibold">Total Active Branches</div>
-          <div className="text-2xl font-bold mt-1">142</div>
-        </div>
-        <div className="card p-4 border-l-4 border-l-brand-500">
-          <div className="text-xs text-gray-500 uppercase font-semibold">Total Value (Consigned)</div>
-          <div className="text-2xl font-bold mt-1">8.4M <span className="text-sm font-normal text-gray-500">THB</span></div>
-        </div>
-        <div className="card p-4 border-l-4 border-l-yellow-500">
-          <div className="text-xs text-gray-500 uppercase font-semibold">Low Stock Branches</div>
-          <div className="text-2xl font-bold mt-1 text-yellow-600">18</div>
-        </div>
-        <div className="card p-4 border-l-4 border-l-red-500">
-          <div className="text-xs text-gray-500 uppercase font-semibold">Pending Reconcile</div>
-          <div className="text-2xl font-bold mt-1 text-red-600">5</div>
-        </div>
-      </div>
+      {data?.source === 'seed' ? (
+        <Alert variant="info">Using seed branch stock — sync CONSI SO data for live sc_web_consi_branch_stock_view.</Alert>
+      ) : null}
+      {data?.source === 'empty' ? (
+        <Alert variant="info">No branch stock in Supabase — showing empty table safely.</Alert>
+      ) : null}
 
-      <div className="card p-0 overflow-hidden">
-        <div className="p-4 border-b flex flex-wrap gap-2 items-center justify-between bg-gray-50">
-          <h3 className="font-semibold text-gray-700">Branch Inventory</h3>
-          <div className="flex gap-2">
-            <select className="tgm-input text-sm">
-              <option value="">All Branches</option>
-              <option value="B001">Lotus - Rama 4</option>
-              <option value="B002">Big C - Ratchada</option>
-              <option value="B003">Tops - Central World</option>
-            </select>
-            <input 
-              type="text" 
-              className="tgm-input text-sm w-64" 
-              placeholder="Search SKU..." 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <button className="btn btn-secondary">Filter</button>
-          </div>
+      {data?.summary ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <KpiCard label="Active Branches" value={data.summary.branchCount} />
+          <KpiCard label="SKU Lines" value={data.summary.skuLines} />
+          <KpiCard label="Low Stock Lines" value={data.summary.lowStockLines} />
+          <KpiCard label="Est. Value" value={`฿${fmt(data.summary.estimatedValue)}`} />
         </div>
+      ) : null}
+
+      <TablePanel title="Branch Inventory">
+        <form onSubmit={handleFilterSubmit} className="mb-4 flex flex-wrap gap-2 border-b border-[var(--color-border)] pb-4">
+          <select
+            className="tgm-input text-sm"
+            value={branchCode}
+            onChange={(e) => setBranchCode(e.target.value)}
+          >
+            <option value="">All Branches</option>
+            {(data?.branches || []).map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+          <input
+            type="search"
+            className="tgm-input w-64 text-sm"
+            placeholder="Search SKU / branch..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button type="submit" className="btn btn-secondary">Filter</button>
+        </form>
+
+        {loading ? <Alert variant="info">Loading branch stock...</Alert> : null}
+
         <div className="overflow-x-auto">
           <table className="tgm-table whitespace-nowrap min-w-max">
             <thead>
@@ -77,37 +109,26 @@ export default function BranchStockPage() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Lotus - Rama 4</td>
-                <td className="font-mono text-brand-600">FG-00100</td>
-                <td>Thai Sausage Premium 500g</td>
-                <td className="text-right font-semibold">45.00</td>
-                <td className="text-right text-gray-500">20.00</td>
-                <td className="text-right text-gray-500">100.00</td>
-                <td><Badge type="success">Normal</Badge></td>
-              </tr>
-              <tr>
-                <td>Lotus - Rama 4</td>
-                <td className="font-mono text-brand-600">FG-00105</td>
-                <td>Vienna Sausage 1kg</td>
-                <td className="text-right font-semibold text-red-500">5.00</td>
-                <td className="text-right text-gray-500">15.00</td>
-                <td className="text-right text-gray-500">50.00</td>
-                <td><Badge type="danger">Low Stock</Badge></td>
-              </tr>
-              <tr>
-                <td>Big C - Ratchada</td>
-                <td className="font-mono text-brand-600">FG-00100</td>
-                <td>Thai Sausage Premium 500g</td>
-                <td className="text-right font-semibold">85.00</td>
-                <td className="text-right text-gray-500">30.00</td>
-                <td className="text-right text-gray-500">100.00</td>
-                <td><Badge type="success">Normal</Badge></td>
-              </tr>
+              {(data?.rows || []).map((row) => (
+                <tr key={`${row.branchCode}-${row.productCode}`}>
+                  <td>{row.branchName || row.branchCode}</td>
+                  <td className="font-mono text-brand-600">{row.productCode}</td>
+                  <td>{row.productName}</td>
+                  <td className="text-right font-semibold">{fmt(row.balanceQty)}</td>
+                  <td className="text-right text-[var(--color-text-muted)]">{fmt(row.minQty)}</td>
+                  <td className="text-right text-[var(--color-text-muted)]">{fmt(row.maxQty)}</td>
+                  <td>{statusBadge(row.status)}</td>
+                </tr>
+              ))}
+              {!loading && !(data?.rows?.length) ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-[var(--color-text-muted)]">No branch stock rows.</td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
-      </div>
+      </TablePanel>
     </section>
   );
 }

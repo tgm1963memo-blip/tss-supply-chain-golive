@@ -1,6 +1,6 @@
 # Legacy Function Coverage Check Result
 
-Generated: 2026-06-10T03:14:37.481Z
+Generated: 2026-06-10T03:32:22.797Z
 
 Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old project\tgm-supplychain\index.html`
 
@@ -9,9 +9,9 @@ Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old pr
 | Metric | Count |
 |--------|------:|
 | Legacy pg* functions in index.html | 24 |
-| Registry entries audited | 41 |
-| COMPLETE | 30 |
-| PARTIAL | 4 |
+| Registry entries audited | 47 |
+| COMPLETE | 37 |
+| PARTIAL | 3 |
 | MISSING | 0 |
 | BLOCKED_BY_GOVERNANCE | 7 |
 
@@ -32,7 +32,13 @@ _None — all critical handlers have route + page mapping._
 | Sales | sales_order | pgPlanBooking | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Sales | promotions | promotions | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Sales | return_cn | return_cn | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
-| Consignment | consi | pgConsignment | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
+| Consignment | consi | pgConsignment | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | consi_so | goliveConsignmentSo | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | branch_stock | goliveBranchStock | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | consi_movement | goliveConsignmentMovement | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | sell_out | goliveSellOut | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | return_branch | goliveReturnFromBranch | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Consignment | return_cn | goliveConsignmentReturnCn | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Planning | demand | goliveDemandPlan | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Planning | atp | goliveAtpWorkbench | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Planning | shortage | goliveShortageReview | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
