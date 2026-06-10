@@ -121,13 +121,32 @@ describe('local mirror foundation', () => {
     });
   });
 
-  it('.gitignore excludes local mirror data, logs, cache, db files', () => {
+  it('.gitignore excludes pycache, local data, env files', () => {
     const gitignore = readProjectFile('.gitignore');
+    expect(gitignore).toMatch(/__pycache__\//);
+    expect(gitignore).toMatch(/\*\.pyc/);
     expect(gitignore).toMatch(/scripts\/local-mirror\/data\//);
     expect(gitignore).toMatch(/scripts\/local-mirror\/logs\//);
     expect(gitignore).toMatch(/scripts\/local-mirror\/cache\//);
+    expect(gitignore).toMatch(/scripts\/local-mirror\/\.env/);
+    expect(gitignore).toMatch(/scripts\/express-readonly-sync\/cache\//);
+    expect(gitignore).toMatch(/scripts\/express-readonly-sync\/logs\//);
+    expect(gitignore).toMatch(/scripts\/express-readonly-sync\/\.env/);
     expect(gitignore).toMatch(/\*\.duckdb/);
     expect(gitignore).toMatch(/\*\.sqlite/);
+  });
+
+  it('sync script imports cleanup_run_cache from dbf_run_cache', () => {
+    const syncScript = readProjectFile('scripts/local-mirror/sync_express_to_local_mirror.py');
+    expect(syncScript).toMatch(/from dbf_run_cache import cleanup_run_cache/);
+    expect(syncScript).not.toMatch(/safe_cleanup_run_cache/);
+    expect(syncScript).toMatch(/cleanup_run_cache\(/);
+  });
+
+  it('pipeline aborts on sync failure with clear message', () => {
+    const pipeline = readProjectFile('scripts/local-mirror/run_local_mirror_pipeline.py');
+    expect(pipeline).toMatch(/Stopped after sync failure/);
+    expect(pipeline).toMatch(/Build\/push were skipped/);
   });
 
   it('sync script enforces read-only mode', () => {

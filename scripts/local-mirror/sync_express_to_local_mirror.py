@@ -24,7 +24,7 @@ from local_mirror_config import (
 from local_mirror_db import LocalMirrorDB, deterministic_source_id, utc_now_iso
 
 import express_table_mapping as express_config
-from dbf_run_cache import make_run_cache_root, safe_cleanup_run_cache
+from dbf_run_cache import cleanup_run_cache, make_run_cache_root
 from express_sync_engine import ExpressSync
 from safe_dbf_parser import get_first, safe_print, to_number
 
@@ -267,7 +267,7 @@ def main() -> int:
                         f"  read={result['records_read']} written={result['records_written']}"
                     )
     finally:
-        safe_cleanup_run_cache(engine.run_cache_root)
+        cleanup_run_cache(engine.run_cache_root, engine.copied_cache_files)
 
     summary_path = SCRIPT_DIR / "logs" / f"sync_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)

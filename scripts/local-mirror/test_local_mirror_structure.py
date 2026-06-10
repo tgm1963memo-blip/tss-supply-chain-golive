@@ -19,9 +19,15 @@ REQUIRED_FILES = [
 ]
 
 GITIGNORE_MARKERS = [
+    "__pycache__/",
+    "*.pyc",
     "scripts/local-mirror/data/",
     "scripts/local-mirror/logs/",
     "scripts/local-mirror/cache/",
+    "scripts/local-mirror/.env",
+    "scripts/express-readonly-sync/cache/",
+    "scripts/express-readonly-sync/logs/",
+    "scripts/express-readonly-sync/.env",
     "*.duckdb",
     "*.sqlite",
 ]
@@ -50,6 +56,25 @@ def test_gitignore_excludes_local_data() -> None:
         assert marker in gitignore, f".gitignore missing: {marker}"
 
 
+def test_sync_imports_dbf_run_cache() -> None:
+    express_sync_dir = SCRIPT_DIR.parent / "express-readonly-sync"
+    sys.path.insert(0, str(SCRIPT_DIR))
+    sys.path.insert(0, str(express_sync_dir))
+    from dbf_run_cache import cleanup_run_cache, make_run_cache_root  # noqa: F401
+
+    source = (SCRIPT_DIR / "sync_express_to_local_mirror.py").read_text(encoding="utf-8")
+    assert "from dbf_run_cache import cleanup_run_cache" in source
+    assert "safe_cleanup_run_cache" not in source
+    assert "cleanup_run_cache(" in source
+
+
+def test_pipeline_stops_on_step_failure() -> None:
+    source = (SCRIPT_DIR / "run_local_mirror_pipeline.py").read_text(encoding="utf-8")
+    assert "Stopped after sync failure" in source
+    assert "Build/push were skipped" in source
+    assert "returncode" in source
+
+
 def test_migration_013_exists() -> None:
     migration = PROJECT_ROOT / "supabase" / "migrations" / "013_compact_read_model_strategy.sql"
     assert migration.exists(), "Migration 013 missing"
@@ -64,6 +89,8 @@ def main() -> int:
         test_readonly_mode_in_sync_script,
         test_push_uses_service_role_not_anon,
         test_gitignore_excludes_local_data,
+        test_sync_imports_dbf_run_cache,
+        test_pipeline_stops_on_step_failure,
         test_migration_013_exists,
     ]
     failed = 0

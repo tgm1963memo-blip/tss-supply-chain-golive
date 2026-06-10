@@ -15,6 +15,10 @@ dist-ssr
 .env.*.local
 *.local
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,10 +32,12 @@ dist-ssr
 
 # Express read-only sync (local Python env and DBF cache)
 scripts/express-readonly-sync/.venv
+scripts/express-readonly-sync/.env
 scripts/express-readonly-sync/cache/
 scripts/express-readonly-sync/logs/
 
 # Local mirror (raw DBF mirror + compact read model build)
+scripts/local-mirror/.env
 scripts/local-mirror/data/
 scripts/local-mirror/logs/
 scripts/local-mirror/cache/

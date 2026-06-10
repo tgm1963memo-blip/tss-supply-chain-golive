@@ -17,7 +17,11 @@ def run_step(label: str, script: str, extra_args: list[str] | None = None) -> in
     print(" ".join(cmd), flush=True)
     completed = subprocess.run(cmd, cwd=str(SCRIPT_DIR))
     if completed.returncode != 0:
-        print(f"[PIPELINE] step failed: {label} (exit {completed.returncode})", flush=True)
+        print(
+            f"[PIPELINE] ABORT: {label} failed (exit {completed.returncode}). "
+            f"Later steps will not run — fix the error above and retry.",
+            flush=True,
+        )
     return completed.returncode
 
 
@@ -48,16 +52,26 @@ def main() -> int:
     if not args.skip_sync:
         code = run_step("Sync Express -> Local Mirror", "sync_express_to_local_mirror.py", sync_args)
         if code != 0:
+            print(
+                "[PIPELINE] Stopped after sync failure. "
+                "Build/push were skipped to avoid pushing empty read models.",
+                flush=True,
+            )
             return code
 
     if not args.skip_build:
         code = run_step("Build Local Read Models", "build_read_models_from_local.py")
         if code != 0:
+            print(
+                "[PIPELINE] Stopped after build failure. Push was skipped.",
+                flush=True,
+            )
             return code
 
     if not args.skip_push:
         code = run_step("Push Read Models -> Supabase", "push_read_models_to_supabase.py", push_args)
         if code != 0:
+            print("[PIPELINE] Stopped after push failure.", flush=True)
             return code
 
     print("\n[PIPELINE] complete", flush=True)
