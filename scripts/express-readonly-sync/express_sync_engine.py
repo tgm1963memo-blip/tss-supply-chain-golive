@@ -17,6 +17,7 @@ from pathlib import Path
 from dbfread import DBF
 from supabase import create_client
 
+from dbf_run_cache import cleanup_run_cache, make_run_cache_root
 from env_loader import ensure_sync_environment
 from sync_slice import OffsetLimitSlicer
 
@@ -237,6 +238,8 @@ class ExpressSync:
         self.supabase = create_client(url, key)
         self.last_cache_path = None
         self.copied_cache_files = set()
+        self.run_cache_root = make_run_cache_root(config.DBF_TEMP_CACHE_PATH)
+        safe_print(f"[CACHE] run temp dir: {self.run_cache_root}")
 
     def create_job(self, room_code, source_table, status="running"):
         result = self.supabase.table("sync_jobs").insert({
@@ -342,31 +345,10 @@ class ExpressSync:
         return self.supabase.table(target_table).upsert(payloads).execute()
 
     def cleanup_dbf_temp_cache(self):
-        cache_root = config.DBF_TEMP_CACHE_PATH
-        deleted_files = 0
-
-        try:
-            cache_root.mkdir(parents=True, exist_ok=True)
-            for path in list(self.copied_cache_files):
-                if path.exists() and path.is_file() and path.suffix.lower() in {".dbf", ".cdx", ".fpt", ".dbt"}:
-                    path.unlink()
-                    deleted_files += 1
-
-            for path in sorted(cache_root.rglob("*"), reverse=True):
-                if path.is_dir():
-                    try:
-                        path.rmdir()
-                    except OSError:
-                        pass
-
-            safe_print(f"[CLEANUP] Removed {deleted_files} temp DBF cache files from {cache_root}")
-        except Exception as exc:
-            safe_print(f"[WARN] Temp DBF cache cleanup failed: {exc}")
-
-        return deleted_files
+        return cleanup_run_cache(self.run_cache_root, self.copied_cache_files)
 
     def copy_dbf_to_local_cache(self, room_code, table_name, source_path, sync_job_id=None):
-        cache_dir = config.DBF_TEMP_CACHE_PATH / room_code
+        cache_dir = self.run_cache_root / cache_safe_name(room_code)
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         source_path = Path(source_path)
@@ -375,8 +357,6 @@ class ExpressSync:
         try:
             for suffix in [".DBF", ".CDX", ".FPT", ".DBT"]:
                 local_path = cache_dir / f"{source_path.stem}{suffix}"
-                if local_path.exists():
-                    local_path.unlink()
 
                 matching_source = source_path if suffix == ".DBF" else matching_sidecar_path(source_path, suffix)
 

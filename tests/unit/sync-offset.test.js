@@ -27,9 +27,10 @@ describe('sync offset CLI', () => {
     expect(source).toMatch(/OffsetLimitSlicer/);
   });
 
-  it('sync_slice applies offset before limit', () => {
-    const source = readFileSync(join(syncDir, 'sync_slice.py'), 'utf8');
-    expect(source).toMatch(/policy_filtered_count <= self\.offset/);
-    expect(source).toMatch(/self\.synced_count >= self\.limit/);
+  it('express_sync_engine uses per-run DBF cache directory', () => {
+    const source = readFileSync(join(syncDir, 'express_sync_engine.py'), 'utf8');
+    expect(source).toMatch(/make_run_cache_root/);
+    expect(source).toMatch(/run_cache_root/);
+    expect(source).not.toMatch(/DBF_TEMP_CACHE_PATH \/ room_code/);
   });
 });

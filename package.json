@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run && python scripts/express-readonly-sync/test_sync_offset.py",
+    "test": "vitest run && python scripts/express-readonly-sync/test_sync_offset.py && python scripts/express-readonly-sync/test_dbf_run_cache.py",
     "legacy:audit": "node scripts/audit/legacy_function_coverage_check.js",
     "gate:validate": "python scripts/gate-run-2-validate.py",
     "sync:validate-keys": "python scripts/express-readonly-sync/validate_upsert_conflict_keys.py"
