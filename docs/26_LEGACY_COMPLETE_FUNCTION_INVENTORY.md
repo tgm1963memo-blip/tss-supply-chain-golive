@@ -93,11 +93,25 @@ Production order / PO creation / stock posting: **BLOCKED_BY_GOVERNANCE** or **R
 
 ## Warehouse / inventory
 
-| Module | Menu key | Handler | Route | Page | Status | Gap |
-|--------|----------|---------|-------|------|--------|-----|
-| Warehouse | wms | pgWMS | `/warehouse/wms` | `WMSDashboardPage.jsx` | **PARTIAL** | OperationsPreviewPage shell |
-| Warehouse | stock | pgStock | `/warehouse/inventory/balance` | `StockBalancePage.jsx` | **PARTIAL** | Needs tests |
-| Warehouse | expiry | pgExpiry | `/warehouse/inventory/lot-expiry` | `LotExpiryControlPage.jsx` | **PARTIAL** | Needs tests |
+| Module | Menu key | Handler | Route | Page | Service | Migration | Status | Notes |
+|--------|----------|---------|-------|------|---------|-----------|--------|-------|
+| Warehouse | wms | pgWMS | `/warehouse/wms` | `WMSDashboardPage.jsx` | `wmsDashboardService.js` | `008` `sc_web_stock_balance_view` | **COMPLETE** | KPI dashboard + WMS quick links |
+| Warehouse | stock | pgStock | `/warehouse/inventory/balance` | `StockBalancePage.jsx` | `warehouseInventoryService.js` | `007`/`008` balance views | **COMPLETE** | Supabase read models + seed fallback |
+| Warehouse | available | goliveAvailableStock | `/warehouse/inventory/available` | `AvailableStockPage.jsx` | `warehouseInventoryService.js` | `sc_inventory_balance_view` | **COMPLETE** | Available qty filters |
+| Warehouse | movement | goliveStockMovement | `/warehouse/inventory/movement` | `StockMovementPage.jsx` | `stockMovementService.js` | `sc_inventory_ledger` | **COMPLETE** | Read-only movement history |
+| Warehouse | ledger | goliveInventoryLedger | `/warehouse/inventory/ledger` | `InventoryLedgerPage.jsx` | `movementLedgerReportService.js` | `sc_inventory_ledger` | **COMPLETE** | Ledger from Express sync |
+| Warehouse | adjustment | goliveStockAdjustment | `/warehouse/inventory/adjustment` | `StockAdjustmentPage.jsx` | `stockAdjustmentService.js` | `sc_stock_adjustment_requests` | **COMPLETE** | REQUEST_ONLY — no posting |
+| Warehouse | cyclecount | goliveCycleCount | `/warehouse/inventory/cycle-count` | `StockCountPage.jsx` | `stockCountService.js` | — | **COMPLETE** | Cycle count workbench |
+| Warehouse | expiry | pgExpiry | `/warehouse/inventory/lot-expiry` | `LotExpiryControlPage.jsx` | `storageAgingReportService.js` | — | **COMPLETE** | Lot/expiry aging |
+| Warehouse | receiving | goliveReceiving | `/warehouse/wms/receiving` | `ReceivingPage.jsx` | `receivingService.js` | `sc_receiving_confirm_requests` | **COMPLETE** | Schedule read; confirm REQUEST_ONLY |
+| Warehouse | putaway | golivePutaway | `/warehouse/wms/putaway` | `PutawayPage.jsx` | `putawayService.js` | — | **COMPLETE** | Putaway workbench |
+| Warehouse | transfer | goliveTransfer | `/warehouse/wms/transfer` | `TransferPage.jsx` | `transferService.js` | `sc_express_transfers` | **COMPLETE** | Internal transfer read |
+| Warehouse | picking | golivePickingPacking | `/warehouse/wms/picking-packing` | `PickingPackingPage.jsx` | `pickingService.js` | `sc_so_pick_pack_candidate_view` | **COMPLETE** | Pick list; confirm pick SAFE MODE |
+| Warehouse | dispatch | goliveDispatchGi | `/warehouse/wms/dispatch-goods-issue` | `DispatchGoodsIssuePage.jsx` | `dispatchService.js` | — | **COMPLETE** | GI preview SAFE MODE |
+| Warehouse | scan | goliveScanCenter | `/warehouse/wms/scan-center` | `ScanCenterPage.jsx` | `scanCenterService.js` | — | **COMPLETE** | Local scan log only |
+| Warehouse | handheld | goliveHandheld | `/warehouse/wms/handheld` | `HandheldOperationsPage.jsx` | `handheldReceivingService.js` | — | **COMPLETE** | Handheld hub |
+
+Stock adjustment, receiving confirmation, goods issue, pick confirm, and WMS posting: **REQUEST_ONLY** / **SAFE MODE** (`express_queue_status = blocked_by_governance` where applicable). No Express write-back.
 
 ---
 
@@ -138,6 +152,20 @@ These exist in `index.html` but need explicit registry rows in future audits:
 - `pgCrWorkflowSettings` — customer registration approver settings
 
 ---
+
+## Newly implemented (Warehouse completion pass)
+
+- `supabase/migrations/008_warehouse_inventory_read_models.sql` — `sc_stock_adjustment_requests`, `sc_receiving_confirm_requests`, `sc_inventory_ledger` view
+- `src/services/warehouse/warehouseInventoryService.js` — balance/available from `sc_inventory_balance_view` + seed fallback
+- `src/services/warehouse/stockAdjustmentService.js` — adjustment **requests** only (blocked_by_governance)
+- `src/services/warehouse/receivingService.js` — receiving schedule from `sc_express_transfers` + seed
+- `src/services/warehouse/wmsDashboardService.js` — WMS KPIs from `sc_web_stock_balance_view`
+- `src/services/warehouse/scanCenterService.js` — local scan log (safe mode, no posting)
+- `src/components/scm-ui/SafeModeActionPanel.jsx` — blocked WMS actions (pick confirm, GI preview)
+- Rewrote `StockBalancePage.jsx`, `WMSDashboardPage.jsx`, `StockAdjustmentPage.jsx`, `ReceivingPage.jsx`, `AvailableStockPage.jsx`, `ScanCenterPage.jsx`
+- Updated `PickingPackingPage.jsx`, `DispatchGoodsIssuePage.jsx` — removed OperationsPreviewPage posting tabs
+- Updated `scripts/audit/legacy-registry.js` — 15 Warehouse entries with service/migration/test patterns
+- `tests/unit/warehouse-module-completion.test.jsx`
 
 ## Newly implemented (Planning completion pass)
 
@@ -196,7 +224,7 @@ npm run build
 
 **A. Sales:** ✅ Complete  
 **B. Planning:** ✅ Complete (routable entries); prod plan/summary/doc remain BLOCKED  
-**C. Warehouse:** WMS dashboard real UI, stock balance tests  
+**C. Warehouse:** ✅ Complete (15/15 routable entries); all posting actions REQUEST_ONLY / SAFE MODE  
 **D. Consignment:** Replace OperationsPreviewPage shells with request workflows  
 **E. Master Data:** SKU settings, group admin  
 **F. Admin:** Wire user/perm/audit routes when auth module approved

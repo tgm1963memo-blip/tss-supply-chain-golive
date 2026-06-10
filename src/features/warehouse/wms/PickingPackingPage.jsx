@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PageSubnav from '../../../components/scm-ui/PageSubnav.jsx';
-import OperationsPreviewPage from '../../../components/scm-ui/OperationsPreviewPage.jsx';
+import { SafeModeActionPanel } from '../../../components/scm-ui/SafeModeActionPanel.jsx';
 import { DocumentFilterBar } from '../../../components/wms/operations/DocumentFilterBar.jsx';
 import { DocumentToolbar } from '../../../components/wms/operations/DocumentToolbar.jsx';
 import { DataTable } from '../../../components/wms/ui/DataTable.jsx';
@@ -91,7 +91,16 @@ export default function PickingPackingPage() {
       ) : null}
 
       {activeTab === 'confirm-pick' ? (
-        <OperationsPreviewPage previewKey="confirm-pick" backPath="/warehouse/wms/picking-packing" />
+        <SafeModeActionPanel
+          title="Confirm Pick"
+          description="Legacy confirm-pick workflow is disabled in golive safe mode."
+          blockedAction="Confirm pick / stock deduction"
+          checklist={[
+            'Pick confirmation does not post to Express',
+            'Use Picking document list tab for read-only review',
+            'SO pick-pack candidates show readiness only',
+          ]}
+        />
       ) : null}
     </section>
   );

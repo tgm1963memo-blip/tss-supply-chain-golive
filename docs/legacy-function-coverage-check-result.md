@@ -1,6 +1,6 @@
 # Legacy Function Coverage Check Result
 
-Generated: 2026-06-10T03:02:10.491Z
+Generated: 2026-06-10T03:14:37.481Z
 
 Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old project\tgm-supplychain\index.html`
 
@@ -9,9 +9,9 @@ Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old pr
 | Metric | Count |
 |--------|------:|
 | Legacy pg* functions in index.html | 24 |
-| Registry entries audited | 29 |
-| COMPLETE | 15 |
-| PARTIAL | 7 |
+| Registry entries audited | 41 |
+| COMPLETE | 30 |
+| PARTIAL | 4 |
 | MISSING | 0 |
 | BLOCKED_BY_GOVERNANCE | 7 |
 
@@ -43,9 +43,21 @@ _None — all critical handlers have route + page mapping._
 |  | prodplan | pgProdPlan | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |
 |  | prodsummary | pgProdSummary | ✗ | ✗ | ✗ | ✓ | ✗ | **BLOCKED_BY_GOVERNANCE** | No golive route mapped yet — planning module gap |
 |  | forecastdoc | pgForecastDoc | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | Forecast document workflow not migrated |
-| Warehouse | wms | pgWMS | ✓ | ✗ | ✓ | ✓ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; No dedicated test coverage found |
-| Warehouse | stock | pgStock | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
-| Warehouse | expiry | pgExpiry | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |
+| Warehouse | wms | pgWMS | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | stock | pgStock | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | available | goliveAvailableStock | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | movement | goliveStockMovement | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | ledger | goliveInventoryLedger | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | adjustment | goliveStockAdjustment | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | cyclecount | goliveCycleCount | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | expiry | pgExpiry | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | receiving | goliveReceiving | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | putaway | golivePutaway | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | transfer | goliveTransfer | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | picking | golivePickingPacking | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | dispatch | goliveDispatchGi | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | scan | goliveScanCenter | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
+| Warehouse | handheld | goliveHandheld | ✓ | ✓ | ✓ | ✓ | ✓ | **COMPLETE** | None |
 | Master Data | skuadmin | pgSKUAdmin | ✓ | ✗ | ✗ | ✗ | ✗ | **PARTIAL** | Page is PlaceholderCard or OperationsPreviewPage shell only; Service layer missing; Supabase migration/table/view missing; No dedicated test coverage found |
 |  | groups | pgGroupAdmin | ✗ | ✗ | ✗ | ✗ | ✗ | **BLOCKED_BY_GOVERNANCE** | Group admin not migrated — master data gap |
 | Admin | reports | pgReports | ✓ | ✓ | ✓ | ✓ | ✗ | **PARTIAL** | No dedicated test coverage found |

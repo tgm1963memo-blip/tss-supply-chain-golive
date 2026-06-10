@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PageSubnav from '../../../components/scm-ui/PageSubnav.jsx';
-import OperationsPreviewPage from '../../../components/scm-ui/OperationsPreviewPage.jsx';
+import { SafeModeActionPanel } from '../../../components/scm-ui/SafeModeActionPanel.jsx';
 import { DocumentFilterBar } from '../../../components/wms/operations/DocumentFilterBar.jsx';
 import { DocumentToolbar } from '../../../components/wms/operations/DocumentToolbar.jsx';
 import { DataTable } from '../../../components/wms/ui/DataTable.jsx';
@@ -126,7 +126,16 @@ export default function DispatchGoodsIssuePage() {
       ) : null}
 
       {activeTab === 'goods-issue-preview' ? (
-        <OperationsPreviewPage previewKey="goods-issue" backPath="/warehouse/wms/dispatch-goods-issue" />
+        <SafeModeActionPanel
+          title="Goods Issue Preview"
+          description="Legacy goods issue posting preview — read-only in golive."
+          blockedAction="Post goods issue / dispatch"
+          checklist={[
+            'No dispatch posting to Express',
+            'Use Dispatch tab for document list',
+            'Outbound tab shows read-only detail',
+          ]}
+        />
       ) : null}
     </section>
   );
