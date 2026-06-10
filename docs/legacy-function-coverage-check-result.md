@@ -1,6 +1,6 @@
 # Legacy Function Coverage Check Result
 
-Generated: 2026-06-10T03:40:40.302Z
+Generated: 2026-06-10T04:03:58.987Z
 
 Legacy source: `C:\Users\TSS\OneDrive\เดสก์ท็อป\IT\Code old project\tgm-supplychain\index.html`
 

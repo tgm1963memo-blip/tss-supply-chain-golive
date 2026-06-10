@@ -26,10 +26,30 @@ export async function getWmsDashboardData() {
 
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
+      let data = null;
+      let error = null;
+
+      const primary = await supabase
         .from('sc_web_stock_balance_view')
         .select('product_code, product_name, qty_on_hand, synced_at')
         .limit(5000);
+      data = primary.data;
+      error = primary.error;
+
+      if (error || !(data || []).length) {
+        const fallback = await supabase
+          .from('sc_inventory_balance_view')
+          .select('product_code, product_name, erp_on_hand_qty, source_updated_at')
+          .limit(5000);
+        if (fallback.error) throw fallback.error;
+        data = (fallback.data || []).map((row) => ({
+          product_code: row.product_code,
+          product_name: row.product_name,
+          qty_on_hand: row.erp_on_hand_qty,
+          synced_at: row.source_updated_at,
+        }));
+        error = null;
+      }
 
       if (error) throw error;
 

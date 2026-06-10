@@ -100,7 +100,7 @@ UPSERT_CONFLICT_KEYS = {
     "sc_express_customers": "room_code,customer_code",
     "sc_express_so_headers": "room_code,document_no",
     "sc_express_so_lines": "room_code,document_no,line_no",
-    "sc_express_invoices": "room_code,document_no",
+    "sc_express_invoices": "room_code,document_no,line_no",
     "sc_express_transfers": "room_code,document_no",
 }
 

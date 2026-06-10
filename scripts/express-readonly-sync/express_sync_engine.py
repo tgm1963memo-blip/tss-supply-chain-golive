@@ -18,6 +18,7 @@ from dbfread import DBF
 from supabase import create_client
 
 from env_loader import ensure_sync_environment
+from sync_slice import OffsetLimitSlicer
 
 ensure_sync_environment()
 
@@ -122,6 +123,7 @@ def map_record(room_code, table_name, raw_record):
         return target_table, {
             **common,
             "document_no": get_first(raw_record, "DOCNUM", "DOCNO", "INVNO"),
+            "line_no": int(to_number(get_first(raw_record, "SEQNUM", "SEQ", "LINE_NO", "TRNLIN"), default=0)),
             "customer_code": get_first(raw_record, "CUSCOD", "CUSTOMER_CODE"),
             "invoice_date": get_first(raw_record, "DOCDAT", "INVDAT", "DOC_DATE"),
             "status": get_first(raw_record, "STATUS", default="synced"),
@@ -147,7 +149,7 @@ def validate_payload(target_table, payload):
         "sc_express_customers": ["room_code", "customer_code"],
         "sc_express_so_headers": ["room_code", "document_no"],
         "sc_express_so_lines": ["room_code", "document_no", "product_code"],
-        "sc_express_invoices": ["room_code", "document_no"],
+        "sc_express_invoices": ["room_code", "document_no", "line_no"],
         "sc_express_transfers": ["room_code", "document_no"],
     }
 
@@ -453,6 +455,8 @@ class ExpressSync:
             return False
         if options.get("limit"):
             return False
+        if options.get("offset"):
+            return False
         if options.get("since_date"):
             return False
         if policy_group in {"master_full", "stock_current_full", "active_order_full", "sales_invoice_detail_1y"}:
@@ -489,8 +493,8 @@ class ExpressSync:
             return False, "monthly_summary_not_implemented"
 
         if policy_group == "blocked_full_history_by_default":
-            if options.get("limit"):
-                return True, "limit_override"
+            if options.get("limit") or options.get("offset"):
+                return True, "slice_override"
             if date_window:
                 record_date, field_name = get_record_policy_date(raw_record, policy_group)
                 if not field_name:
@@ -509,6 +513,8 @@ class ExpressSync:
         date_window = get_policy_date_window(policy_group, options.get("since_date"))
         dry_run = bool(options.get("dry_run"))
         limit = options.get("limit")
+        offset = options.get("offset") or 0
+        slicer = OffsetLimitSlicer(offset=offset, limit=limit)
         limited = False
         invalid_date_table_key = table_name
         invalid_date_start_count = INVALID_DATE_COUNTS.get(invalid_date_table_key, 0)
@@ -516,6 +522,7 @@ class ExpressSync:
         safe_print(f"[READ] {table_name}")
         safe_print(f"[PATH] {dbf_path}")
         safe_print(f"[POLICY] table={table_name} policy_group={policy_group} since_date={date_window}")
+        safe_print(f"[SLICE] offset={offset} limit={limit}")
 
         summary = {
             "room": room_code,
@@ -533,6 +540,9 @@ class ExpressSync:
             "dry_run": dry_run,
             "limited": False,
             "limit": limit,
+            "offset": offset,
+            "policy_filtered_rows": 0,
+            "rows_skipped_by_offset": 0,
             "since_date": date_window.isoformat() if date_window else None,
             "cache_path": None,
             "failed_records_path": str(config.FAILED_RECORDS_CACHE_PATH / cache_safe_name(room_code)),
@@ -549,7 +559,7 @@ class ExpressSync:
             self.print_table_summary(summary)
             return summary
 
-        if policy_group in {"sales_invoice_detail_1y", "blocked_full_history_by_default"} and not get_policy_config(policy_group).get("date_fields") and not (limit or options.get("full")):
+        if policy_group in {"sales_invoice_detail_1y", "blocked_full_history_by_default"} and not get_policy_config(policy_group).get("date_fields") and not (limit or offset or options.get("full")):
             safe_print(f"[POLICY_DATE_FIELD_MISSING] {table_name} has no configured date field")
             summary["status"] = "blocked_missing_date_field"
             summary["elapsed_time"] = time.perf_counter() - table_started_at
@@ -667,6 +677,19 @@ class ExpressSync:
                         safe_print(f"[COUNT] {total_read} rows processed")
                     continue
 
+                if not slicer.accept_policy_row():
+                    if slicer.stopped:
+                        limited = bool(limit)
+                        summary["limited"] = limited
+                        safe_print(
+                            f"[LIMIT] {table_name} offset={offset} limit={limit} "
+                            f"policy_filtered={slicer.policy_filtered_count} synced={slicer.synced_count}"
+                        )
+                        break
+                    if total_read % 1000 == 0:
+                        safe_print(f"[COUNT] {total_read} rows processed")
+                    continue
+
                 try:
                     target_table, payload = map_record(room_code, table_name, raw_record)
                     summary["normalized_null_key_fields"] += normalize_payload_for_target(target_table, payload)
@@ -707,14 +730,25 @@ class ExpressSync:
                 if total_read % 1000 == 0:
                     safe_print(f"[COUNT] {total_read} rows processed")
 
-                if limit and summary["selected_rows"] >= limit:
-                    limited = True
-                    summary["limited"] = True
-                    safe_print(f"[LIMIT] {table_name} selected row limit reached: {limit}")
+                if slicer.stopped:
+                    limited = bool(limit)
+                    summary["limited"] = limited
+                    safe_print(
+                        f"[LIMIT] {table_name} offset={offset} limit={limit} "
+                        f"policy_filtered={slicer.policy_filtered_count} synced={slicer.synced_count}"
+                    )
                     break
 
                 if batch_read >= config.SYNC_BATCH_SIZE:
                     flush_batch()
+
+            summary.update(slicer.summary_fields())
+            safe_print(
+                f"[SLICE_SUMMARY] offset={offset} limit={limit} "
+                f"policy_filtered_rows={slicer.policy_filtered_count} "
+                f"rows_skipped_by_offset={slicer.rows_skipped_by_offset} "
+                f"selected_rows_after_slice={slicer.synced_count}"
+            )
 
             if not dry_run and batch_id is not None:
                 flush_batch()
@@ -841,6 +875,9 @@ class ExpressSync:
             f"dry_run={summary.get('dry_run')} "
             f"limited={summary.get('limited')} "
             f"limit={summary.get('limit')} "
+            f"offset={summary.get('offset')} "
+            f"policy_filtered_rows={summary.get('policy_filtered_rows')} "
+            f"rows_skipped_by_offset={summary.get('rows_skipped_by_offset')} "
             f"since_date={summary.get('since_date')} "
             f"cache_path={summary.get('cache_path')} "
             f"failed_records_path={summary.get('failed_records_path')} "
@@ -960,7 +997,8 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(description="Sync Express ERP DBF data into Supabase raw tables.")
     parser.add_argument("--room", action="append", dest="rooms", help="Room code to sync. Can be passed multiple times.")
     parser.add_argument("--table", action="append", dest="tables", help="DBF table to sync. Can be passed multiple times.")
-    parser.add_argument("--limit", type=int, help="Maximum selected records per table after policy filtering.")
+    parser.add_argument("--limit", type=int, help="Maximum selected records per table after policy filtering and offset.")
+    parser.add_argument("--offset", type=int, default=0, help="Skip this many policy-filtered rows before syncing.")
     parser.add_argument("--dry-run", action="store_true", help="Read, parse, filter, and validate without writing to Supabase.")
     parser.add_argument("--full", action="store_true", help="Explicitly allow full sync for selected tables.")
     parser.add_argument("--since-date", help="Override policy date window. Format: YYYY-MM-DD.")
@@ -986,7 +1024,9 @@ def print_blocked_full_sync_warning():
     safe_print("[BLOCKED_FULL_SYNC] Examples:")
     safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table STMAS.DBF")
     safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table OESOIT.DBF --dry-run --limit 1000")
-    safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table ARTRN.DBF --since-date 2025-05-26")
+    safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table ARTRN.DBF --since-date 2025-01-01 --limit 2000 --offset 0")
+    safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table ARTRN.DBF --since-date 2025-01-01 --limit 2000 --offset 2000")
+    safe_print("[BLOCKED_FULL_SYNC] .\\run_sync.bat --room TSS --table STTRN.DBF --limit 500")
     safe_print("[BLOCKED_FULL_SYNC] Intentional full sync requires --full.")
 
 
@@ -1004,6 +1044,9 @@ def main(argv=None):
     if args.limit is not None and args.limit <= 0:
         raise ValueError("--limit must be greater than 0")
 
+    if args.offset is not None and args.offset < 0:
+        raise ValueError("--offset must be greater than or equal to 0")
+
     if args.months is not None and args.months <= 0:
         raise ValueError("--months must be greater than 0")
 
@@ -1015,6 +1058,7 @@ def main(argv=None):
 
     options = {
         "limit": args.limit,
+        "offset": args.offset,
         "dry_run": args.dry_run,
         "full": args.full,
         "since_date": since_date,

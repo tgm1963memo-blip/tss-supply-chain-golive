@@ -51,7 +51,7 @@ export async function getAtpWorkbenchData(filters = {}) {
   }
 
   try {
-    const [atpRes, shortageRes, reservationRes] = await Promise.all([
+    let [atpRes, shortageRes, reservationRes] = await Promise.all([
       supabase
         .from('sc_web_atp_view')
         .select('room_code, product_code, product_name, product_group, on_hand_qty, atp_qty')
@@ -67,7 +67,26 @@ export async function getAtpWorkbenchData(filters = {}) {
         .limit(5000),
     ]);
 
-    if (atpRes.error) throw atpRes.error;
+    if (atpRes.error || !(atpRes.data || []).length) {
+      const inventoryRes = await supabase
+        .from('sc_inventory_balance_view')
+        .select('room_code, product_code, product_name, erp_on_hand_qty')
+        .limit(5000);
+      if (inventoryRes.error) throw inventoryRes.error;
+      atpRes = {
+        data: (inventoryRes.data || []).map((row) => ({
+          room_code: row.room_code,
+          product_code: row.product_code,
+          product_name: row.product_name,
+          product_group: '',
+          on_hand_qty: row.erp_on_hand_qty,
+          atp_qty: row.erp_on_hand_qty,
+        })),
+        error: null,
+      };
+    } else if (atpRes.error) {
+      throw atpRes.error;
+    }
 
     const openSoBySku = (shortageRes.data || []).reduce((acc, row) => {
       acc[row.product_code] = (acc[row.product_code] || 0) + Number(row.open_so_qty || 0);
