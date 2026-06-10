@@ -3,15 +3,22 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 from safe_dbf_parser import safe_print
 
 
 def make_run_cache_root(base_path: Path) -> Path:
-    """Create cache/dbf_temp/runs/<timestamp>_<pid>/ for this sync process."""
+    """
+    Create a unique cache/dbf_temp/runs/<timestamp>_<pid>_<uuid8>/ folder.
+
+    Each call returns a new directory — never reuses cache/dbf_temp/TSS/ARTRN.DBF
+    or any prior run folder.
+    """
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
-    run_root = base_path / "runs" / f"{timestamp}_{os.getpid()}"
-    run_root.mkdir(parents=True, exist_ok=True)
+    run_id = f"{timestamp}_{os.getpid()}_{uuid4().hex[:8]}"
+    run_root = base_path / "runs" / run_id
+    run_root.mkdir(parents=True, exist_ok=False)
     return run_root
 
 

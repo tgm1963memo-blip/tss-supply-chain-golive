@@ -320,6 +320,32 @@ cd scripts/express-readonly-sync
 # or --full for all policy-eligible rows
 ```
 
+### Gate Run 2 — DBF temp cache lock fix (confirmed)
+
+| Item | Status |
+|------|--------|
+| Problem | ARTRN sync failed with WinError 32 when reusing `cache/dbf_temp/TSS/ARTRN.DBF` |
+| Fix | Each sync run copies DBF sidecars into a **unique** run folder via `shutil.copy2` |
+| Run folder format | `cache/dbf_temp/runs/<timestamp>_<pid>_<uuid8>/<room>/ARTRN.DBF` |
+| Uniqueness | `uuid4().hex[:8]` suffix added so `make_run_cache_root()` never returns the same path twice in one process |
+| Collision guard | `mkdir(parents=True, exist_ok=False)` |
+| Cleanup | Best-effort only — `[WARN]` on failure; next run uses a new folder |
+| Test fix | `test_each_run_gets_unique_directory` passes after uuid suffix |
+| Readonly | Unchanged — no Express write-back |
+
+**Next manual ARTRN Gate Run 2 sync (limit 1000 chunks):**
+
+```powershell
+cd scripts/express-readonly-sync
+
+& .\.venv\Scripts\python.exe sync_express_readonly.py --room TSS --table ARTRN.DBF --since-date 2025-01-01 --limit 1000 --offset 0
+& .\.venv\Scripts\python.exe sync_express_readonly.py --room TSS --table ARTRN.DBF --since-date 2025-01-01 --limit 1000 --offset 1000
+& .\.venv\Scripts\python.exe sync_express_readonly.py --room TSS --table ARTRN.DBF --since-date 2025-01-01 --limit 1000 --offset 2000
+# repeat offset by 1000 until a batch upserts fewer than limit rows
+```
+
+Each chunk uses its own `cache/dbf_temp/runs/<timestamp>_<pid>_<uuid8>/TSS/` folder. `--offset` is applied after policy filtering and before `--limit`.
+
 ### Gate Run 2 recommendation
 
 **NO-GO** until migration 011 is applied on remote and validation script reports:
